@@ -39,17 +39,49 @@ echo "OPENAI_API_KEY=sk-..." > .env
 .venv/bin/python -m scripts.token_compare
 ```
 
+## API 서버
+
+```bash
+.venv/bin/uvicorn server.api:app --reload --port 8000
+```
+
+문서는 http://localhost:8000/docs.
+
+| 메서드 | 경로 | 설명 |
+|---|---|---|
+| `GET` | `/api/health` | 상태·모델명 |
+| `GET` | `/api/options` | 독자/목적/분량 선택지 (프론트가 하드코딩하지 않게) |
+| `POST` | `/api/jobs` | 생성 작업 시작 → `202 {job_id}` |
+| `GET` | `/api/jobs/{id}` | 폴링: 진행 이벤트 + 완료 시 결과 |
+| `GET` | `/api/jobs/{id}/stream` | SSE: `progress` 이벤트 → `result` 이벤트 |
+
+파이프라인 한 번이 수십 초라 요청을 붙잡지 않고 job 으로 돌린다. CrewAI 호출이
+동기 코드여서 백그라운드 스레드에서 실행하고, 진행 상황만 따로 구독한다.
+SSE 가 막히는 환경을 대비해 폴링 경로도 함께 열어 둔다.
+
+```bash
+curl -X POST localhost:8000/api/jobs -H 'Content-Type: application/json' -d '{
+  "source_type": "local", "path": "./sample_posts",
+  "topic": "파이썬 타입 힌트 도입기",
+  "audience": "동료 개발자", "purpose": "회고", "length": "짧게"
+}'
+curl -N localhost:8000/api/jobs/<job_id>/stream
+```
+
 ## 구조
 
 ```
 server/
-  pipeline.py      run_pipeline() — CLI와 (추후) FastAPI의 공통 진입점
+  pipeline.py      run_pipeline() — CLI와 API의 공통 진입점
   agents.py        분석가 / 작가 / 편집자
   tasks.py         Task description (ReAct 절차 명시)
-  models.py        StyleGuide, EditReport 등 자료구조
+  models.py        StyleGuide, EditReport 등 내부 자료구조
   tokens.py        토큰 계측 + 샘플 토큰 예산
   sources/         소스별 로더 (local_md 구현)
   cli.py           CLI 인터페이스
+  api.py           FastAPI 앱 (HTTP 처리만, 생성 로직 없음)
+  jobs.py          백그라운드 job 실행·진행 이벤트 수집
+  schemas.py       HTTP 경계 전용 요청/응답 스키마
 scripts/
   token_compare.py 한/영 토큰 수 비교 실험
 sample_posts/      데모용 마크다운 3편
@@ -75,7 +107,7 @@ sample_posts/      데모용 마크다운 3편
 
 - [x] 로컬 md 로드 → 문체 분석 → 초안 생성 → 편집 (CLI 완주)
 - [x] 토큰 측정
-- [ ] FastAPI로 감싸기
+- [x] FastAPI로 감싸기 (SSE + 폴링)
 - [ ] React UI (토스 스타일)
 - [ ] velog API 연동
 - [ ] 템플릿 경로 (글 없는 사용자)
