@@ -13,7 +13,8 @@ import TextField from './components/TextField'
 import { useJobRun } from './useJobRun'
 
 // 한 화면에 한 가지만 묻는다. 그래서 폼 하나가 아니라 단계 목록이다.
-const STEPS = ['source', 'topic', 'audience', 'purpose', 'length']
+// 독자·분량은 묻지 않는다. 독자는 문서 유형에 담겨 있고 분량은 규칙이 정한다.
+const STEPS = ['source', 'topic', 'doc_type', 'tone']
 const TOTAL = STEPS.length
 
 // 편집자는 '글 다듬기'로 옮겼다. 초안 작성은 분석과 작성 두 단계다.
@@ -38,9 +39,8 @@ const EMPTY_FORM = {
   source_type: 'upload',
   username: '',
   topic: '',
-  audience: '',
-  purpose: '',
-  length: '',
+  doc_type: '',
+  tone: '',
 }
 
 export default function DraftFlow({ options, model, onHome, onReview }) {
@@ -66,9 +66,9 @@ export default function DraftFlow({ options, model, onHome, onReview }) {
     setStep(0)
   }
 
-  function start(length) {
-    set('length', length)
-    const body = { ...form, length }
+  function start(tone) {
+    set('tone', tone)
+    const body = { ...form, tone }
     if (form.source_type === 'upload' && folder) {
       body.files = folder.files
       body.folder_name = folder.folderName
@@ -177,32 +177,28 @@ export default function DraftFlow({ options, model, onHome, onReview }) {
         </StepShell>
       )}
 
-      {stepName === 'audience' && options && (
-        <StepShell step={3} total={TOTAL} title="누가 읽을 글인가요?">
+      {stepName === 'doc_type' && options && (
+        <StepShell
+          step={3}
+          total={TOTAL}
+          title="어떤 유형의 글인가요?"
+          description="유형이 글의 구조를 정합니다. 독자가 언제 찾아 읽는 글인지로 골라주세요."
+        >
           <ChoiceList
-            options={options.audiences}
-            value={form.audience}
-            onSelect={pick('audience')}
+            options={options.doc_types}
+            value={form.doc_type}
+            hint={options.doc_type_spec}
+            onSelect={pick('doc_type')}
           />
         </StepShell>
       )}
 
-      {stepName === 'purpose' && options && (
-        <StepShell step={4} total={TOTAL} title="왜 쓰는 글인가요?">
+      {stepName === 'tone' && options && (
+        <StepShell step={4} total={TOTAL} title="어떤 말투로 쓸까요?">
           <ChoiceList
-            options={options.purposes}
-            value={form.purpose}
-            onSelect={pick('purpose')}
-          />
-        </StepShell>
-      )}
-
-      {stepName === 'length' && options && (
-        <StepShell step={5} total={TOTAL} title="얼마나 길게 쓸까요?">
-          <ChoiceList
-            options={options.lengths}
-            value={form.length}
-            hint={options.length_spec}
+            options={options.tones}
+            value={form.tone}
+            hint={options.tone_spec}
             onSelect={start}
           />
         </StepShell>

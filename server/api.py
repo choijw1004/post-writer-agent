@@ -19,6 +19,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import StreamingResponse
 
 from server import config, jobs
+from server.doc_types import DOC_TYPES
 from server.models import SourceSpec
 from server.sources import parse_markdown
 from server.schemas import (
@@ -59,10 +60,10 @@ def health() -> dict[str, str]:
 def options() -> OptionsResponse:
     """프론트의 선택지 목록. 서버가 단일 출처다."""
     return OptionsResponse(
-        audiences=config.AUDIENCES,
-        purposes=config.PURPOSES,
-        lengths=config.LENGTHS,
-        length_spec=config.LENGTH_SPEC,
+        doc_types=list(DOC_TYPES),
+        doc_type_spec={name: d.when for name, d in DOC_TYPES.items()},
+        tones=config.TONES,
+        tone_spec=config.TONE_SPEC,
         model=config.MODEL,
     )
 
@@ -92,9 +93,8 @@ def create_job(req: GenerateRequest) -> JobCreated:
     job = jobs.start_job(
         source=source,
         topic=req.topic,
-        audience=req.audience,
-        purpose=req.purpose,
-        length=req.length,
+        doc_type=req.doc_type,
+        tone=req.tone,
     )
     return JobCreated(job_id=job.id, status=job.status)
 
@@ -102,11 +102,7 @@ def create_job(req: GenerateRequest) -> JobCreated:
 @app.post("/api/reviews", response_model=JobCreated, status_code=202)
 def create_review(req: ReviewRequest) -> JobCreated:
     """글 다듬기 작업을 만든다. 소스도 주제도 필요 없고 글만 받는다."""
-    job = jobs.start_review(
-        draft=req.draft,
-        audience=req.audience,
-        purpose=req.purpose,
-    )
+    job = jobs.start_review(draft=req.draft, doc_type=req.doc_type)
     return JobCreated(job_id=job.id, status=job.status)
 
 

@@ -72,13 +72,12 @@ def _strip_code_fence(text: str) -> str:
 def run_pipeline(
     source: SourceSpec,
     topic: str,
-    audience: str,
-    purpose: str,
-    length: str,
+    doc_type: str,
+    tone: str,
     on_progress: ProgressFn = _noop,
 ) -> PipelineResult:
-    """기존 글 → 문체 분석 → 초안 생성 → 편집 검토까지 한 번에 실행한다."""
-    brief = BriefSpec(topic=topic, audience=audience, purpose=purpose, length=length)
+    """기존 글 → 문체 분석 → 초안 생성까지 실행한다."""
+    brief = BriefSpec(topic=topic, doc_type=doc_type, tone=tone)
     usages: list = []
 
     # ── 0. 소스 로드 + 토큰 예산으로 샘플 선별 ────────────────────────
@@ -137,8 +136,7 @@ def run_pipeline(
 
 def run_review(
     draft: str,
-    audience: str,
-    purpose: str,
+    doc_type: str,
     on_progress: ProgressFn = _noop,
 ) -> ReviewResult:
     """이미 있는 글에서 오타와 논리 문제를 찾는다. 글을 고쳐주지는 않는다.
@@ -160,7 +158,7 @@ def run_review(
 
     # ── 2. 편집자 ────────────────────────────────────────────────────
     on_progress("edit", "start")
-    brief = BriefSpec(topic="", audience=audience, purpose=purpose, length="")
+    brief = BriefSpec(topic="", doc_type=doc_type, tone="")
     editor = editor_agent()
     editing_out = _run_stage(
         editor,

@@ -12,6 +12,7 @@ from typing import Literal
 from pydantic import BaseModel, Field, model_validator
 
 from server import config
+from server.doc_types import DOC_TYPE_NAMES
 from server.models import PipelineResult, ReviewResult
 
 
@@ -33,18 +34,15 @@ class GenerateRequest(BaseModel):
     template: str | None = Field(default=None, description="template 소스: 템플릿 키")
 
     topic: str = Field(min_length=1, max_length=200)
-    audience: str
-    purpose: str
-    length: str
+    doc_type: str
+    tone: str
 
     @model_validator(mode="after")
     def check_choices(self) -> "GenerateRequest":
-        if self.audience not in config.AUDIENCES:
-            raise ValueError(f"audience 는 {config.AUDIENCES} 중 하나여야 합니다.")
-        if self.purpose not in config.PURPOSES:
-            raise ValueError(f"purpose 는 {config.PURPOSES} 중 하나여야 합니다.")
-        if self.length not in config.LENGTHS:
-            raise ValueError(f"length 는 {config.LENGTHS} 중 하나여야 합니다.")
+        if self.doc_type not in DOC_TYPE_NAMES:
+            raise ValueError(f"doc_type 은 {DOC_TYPE_NAMES} 중 하나여야 합니다.")
+        if self.tone not in config.TONES:
+            raise ValueError(f"tone 은 {config.TONES} 중 하나여야 합니다.")
         if self.source_type == "local" and not self.path:
             raise ValueError("local 소스는 path 가 필요합니다.")
         if self.source_type == "velog" and not self.username:
@@ -69,10 +67,10 @@ class GenerateRequest(BaseModel):
 class OptionsResponse(BaseModel):
     """프론트가 선택지를 하드코딩하지 않도록 서버가 내려준다."""
 
-    audiences: list[str]
-    purposes: list[str]
-    lengths: list[str]
-    length_spec: dict[str, str]
+    doc_types: list[str]
+    doc_type_spec: dict[str, str]  # 유형별 '언제 쓰는지' 설명. 화면 힌트용.
+    tones: list[str]
+    tone_spec: dict[str, str]
     model: str
 
 
@@ -131,15 +129,12 @@ class ReviewRequest(BaseModel):
     """글 다듬기 요청. 소스도 주제도 필요 없고 글 자체만 받는다."""
 
     draft: str = Field(min_length=1)
-    audience: str
-    purpose: str
+    doc_type: str
 
     @model_validator(mode="after")
     def check_choices(self) -> "ReviewRequest":
-        if self.audience not in config.AUDIENCES:
-            raise ValueError(f"audience 는 {config.AUDIENCES} 중 하나여야 합니다.")
-        if self.purpose not in config.PURPOSES:
-            raise ValueError(f"purpose 는 {config.PURPOSES} 중 하나여야 합니다.")
+        if self.doc_type not in DOC_TYPE_NAMES:
+            raise ValueError(f"doc_type 은 {DOC_TYPE_NAMES} 중 하나여야 합니다.")
         if len(self.draft) > config.REVIEW_MAX_CHARS:
             raise ValueError(
                 f"글이 너무 깁니다 ({len(self.draft):,}자, 최대 "

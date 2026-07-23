@@ -13,6 +13,7 @@ import sys
 from pathlib import Path
 
 from server import config, tokens
+from server.doc_types import DOC_TYPE_NAMES
 from server.models import PipelineResult, ReviewResult, SourceSpec
 from server.pipeline import run_pipeline, run_review
 from server.sources import VelogError
@@ -100,12 +101,11 @@ def run_review_command(args) -> int:
         return 1
 
     print(f"검토 대상: {path}")
-    print(f"독자: {args.audience} / 목적: {args.purpose}\n")
+    print(f"문서 유형: {args.type}\n")
 
     result = run_review(
         draft=path.read_text(encoding="utf-8"),
-        audience=args.audience,
-        purpose=args.purpose,
+        doc_type=args.type,
         on_progress=progress,
     )
     print_review(result)
@@ -128,9 +128,13 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("--path", help="local 소스: 마크다운 폴더 경로")
     parser.add_argument("--username", help="velog 소스: 사용자명 (@ 없이)")
     parser.add_argument("--topic", help="쓸 글의 주제 (초안 작성 시 필수)")
-    parser.add_argument("--audience", default="주니어 개발자", choices=config.AUDIENCES)
-    parser.add_argument("--purpose", default="학습 정리", choices=config.PURPOSES)
-    parser.add_argument("--length", default="보통", choices=config.LENGTHS)
+    parser.add_argument(
+        "--type",
+        default="설명 문서",
+        choices=DOC_TYPE_NAMES,
+        help="문서 유형 (docs/type.md 의 4종)",
+    )
+    parser.add_argument("--tone", default="경어체", choices=config.TONES)
     parser.add_argument("--out", help="초안 마크다운을 저장할 파일 경로")
     args = parser.parse_args(argv)
 
@@ -148,15 +152,14 @@ def main(argv: list[str] | None = None) -> int:
     source = SourceSpec(type=args.source, path=args.path, username=args.username)
 
     print(f"주제: {args.topic}")
-    print(f"독자: {args.audience} / 목적: {args.purpose} / 분량: {args.length}\n")
+    print(f"문서 유형: {args.type} / 말투: {args.tone}\n")
 
     try:
         result = run_pipeline(
             source=source,
             topic=args.topic,
-            audience=args.audience,
-            purpose=args.purpose,
-            length=args.length,
+            doc_type=args.type,
+            tone=args.tone,
             on_progress=progress,
         )
     except (

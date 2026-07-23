@@ -11,7 +11,7 @@ import ReviewResultView from './components/ReviewResultView'
 import StepShell from './components/StepShell'
 import { useJobRun } from './useJobRun'
 
-const STEPS = ['draft', 'audience', 'purpose']
+const STEPS = ['draft', 'doc_type']
 const TOTAL = STEPS.length
 
 // 형식 검사는 토큰을 쓰지 않아 순식간에 끝난다. 그래도 점을 하나 두는 이유는,
@@ -24,7 +24,6 @@ const STAGES = [
 export default function ReviewFlow({ options, model, seed = '', onHome }) {
   const [step, setStep] = useState(seed ? 1 : 0) // 초안에서 넘어왔으면 글은 이미 있다
   const [draft, setDraft] = useState(seed)
-  const [audience, setAudience] = useState('')
 
   const job = useJobRun('/api/reviews')
 
@@ -34,12 +33,11 @@ export default function ReviewFlow({ options, model, seed = '', onHome }) {
   function restart() {
     job.reset()
     setDraft('')
-    setAudience('')
     setStep(0)
   }
 
-  function start(purpose) {
-    job.run(() => createReview({ draft, audience, purpose }))
+  function start(docType) {
+    job.run(() => createReview({ draft, doc_type: docType }))
   }
 
   if (job.phase === 'done' && job.result) {
@@ -74,27 +72,19 @@ export default function ReviewFlow({ options, model, seed = '', onHome }) {
         </StepShell>
       )}
 
-      {stepName === 'audience' && options && (
+      {stepName === 'doc_type' && options && (
         <StepShell
           step={2}
           total={TOTAL}
-          title="누가 읽을 글인가요?"
-          description="독자에 따라 어디까지 설명이 필요한지가 달라집니다."
+          title="어떤 유형의 글인가요?"
+          description="유형에 따라 어디까지 설명이 필요한지가 달라집니다."
         >
           <ChoiceList
-            options={options.audiences}
-            value={audience}
-            onSelect={(value) => {
-              setAudience(value)
-              next()
-            }}
+            options={options.doc_types}
+            value=""
+            hint={options.doc_type_spec}
+            onSelect={start}
           />
-        </StepShell>
-      )}
-
-      {stepName === 'purpose' && options && (
-        <StepShell step={3} total={TOTAL} title="왜 쓴 글인가요?">
-          <ChoiceList options={options.purposes} value="" onSelect={start} />
         </StepShell>
       )}
 

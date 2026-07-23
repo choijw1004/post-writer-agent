@@ -38,12 +38,15 @@ class SourceSpec:
 
 @dataclass
 class BriefSpec:
-    """사용자가 입력하는 글 요청."""
+    """사용자가 입력하는 글 요청.
+
+    독자와 분량은 받지 않는다. 독자는 문서 유형(doc_type)에 이미 담겨 있고,
+    분량은 "소제목 최소 5개" 규칙과 유형 템플릿이 정한다.
+    """
 
     topic: str
-    audience: str
-    purpose: str
-    length: str
+    doc_type: str  # doc_types.DOC_TYPES 의 키
+    tone: str  # config.TONES 의 키. 글 다듬기에서는 빈 문자열.
 
 
 # ── 분석가 산출물 ──────────────────────────────────────────────────────

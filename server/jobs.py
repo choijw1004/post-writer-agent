@@ -95,9 +95,8 @@ def _spawn(job: Job, work) -> Job:
 def start_job(
     source: SourceSpec,
     topic: str,
-    audience: str,
-    purpose: str,
-    length: str,
+    doc_type: str,
+    tone: str,
 ) -> Job:
     """초안 작성 job."""
     job = store.create(kind="draft")
@@ -108,9 +107,8 @@ def start_job(
         lambda: run_pipeline(
             source=source,
             topic=topic,
-            audience=audience,
-            purpose=purpose,
-            length=length,
+            doc_type=doc_type,
+            tone=tone,
             on_progress=lambda stage, status, data=None: job.emit(
                 stage, status, data=data
             ),
@@ -118,7 +116,7 @@ def start_job(
     )
 
 
-def start_review(draft: str, audience: str, purpose: str) -> Job:
+def start_review(draft: str, doc_type: str) -> Job:
     """글 다듬기 job. 편집자 1회 호출이라 초안 작성보다 훨씬 빨리 끝난다."""
     job = store.create(kind="review")
     job.emit("queued", "start", "검토 준비 중")
@@ -127,8 +125,7 @@ def start_review(draft: str, audience: str, purpose: str) -> Job:
         job,
         lambda: run_review(
             draft=draft,
-            audience=audience,
-            purpose=purpose,
+            doc_type=doc_type,
             on_progress=lambda stage, status, data=None: job.emit(
                 stage, status, data=data
             ),
