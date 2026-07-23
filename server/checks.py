@@ -32,6 +32,16 @@ def _strip_code_blocks(markdown: str) -> str:
     return _FENCE.sub("", markdown)
 
 
+def count_subheadings(markdown: str) -> int:
+    """소제목(##, ###) 개수.
+
+    작가가 최소 개수 지시를 지켰는지는 모델에게 다시 묻지 않고 여기서 센다.
+    모자라면 pipeline 이 보강 Task 를 한 번 더 돌린다.
+    """
+    text = _strip_code_blocks(markdown)
+    return sum(1 for m in _HEADING.finditer(text) if len(m.group(1)) in (2, 3))
+
+
 def check_code_fences(markdown: str) -> list[ReviewNote]:
     """코드펜스의 언어 태그와, 파이썬 코드의 문법을 본다."""
     notes: list[ReviewNote] = []

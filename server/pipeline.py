@@ -22,7 +22,7 @@ from typing import Callable
 
 from crewai import Crew, Process
 
-from server import checks, style_presets, tasks, tokens
+from server import checks, config, style_presets, tasks, tokens
 from server.agents import analyst_agent, editor_agent, writer_agent
 from server.models import (
     BriefSpec,
@@ -134,6 +134,23 @@ def run_pipeline(
         usages,
     )
     draft = _strip_code_fence(writing_out.raw)
+
+    # 소제목 최소 개수는 코드로 센다. 모자라면 보강 Task 를 한 번만 더 돌린다.
+    # 처음부터 다시 쓰게 하지 않는 이유는 편집자와 같다 — 자기회귀 생성은
+    # 전문 재생성 시 잘 쓴 절까지 함께 바꿔버린다.
+    heading_count = checks.count_subheadings(draft)
+    if heading_count < config.MIN_SUBHEADINGS:
+        expand_out = _run_stage(
+            writer,
+            tasks.expand_task(writer, draft, brief, current=heading_count),
+            "작가(보강)",
+            usages,
+        )
+        expanded = _strip_code_fence(expand_out.raw)
+        # 보강본이 조건을 더 잘 지킬 때만 채택한다. 나빠졌으면 원본 유지.
+        if checks.count_subheadings(expanded) > heading_count:
+            draft = expanded
+
     on_progress("write", "done", {"draft_markdown": draft})
 
     # 초안 작성은 여기서 끝난다. 검토는 '글 다듬기'(run_review)의 몫이다.
