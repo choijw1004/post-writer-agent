@@ -61,7 +61,7 @@ export default function ReviewFlow({ options, model, seed = '', onHome }) {
           step={1}
           total={TOTAL}
           title="어떤 글을 다듬을까요?"
-          description="글을 고쳐주지는 않습니다. 어디가 왜 문제인지만 짚어드립니다."
+          description="글을 대신 고치지는 않아요. 어디가 왜 아쉬운지 콕 짚어드릴게요. 마지막 손질은 내 몫이라, 글이 끝까지 내 글로 남아요."
         >
           <div className="space-y-6">
             <DraftInput value={draft} onChange={setDraft} />
@@ -77,7 +77,7 @@ export default function ReviewFlow({ options, model, seed = '', onHome }) {
           step={2}
           total={TOTAL}
           title="어떤 유형의 글인가요?"
-          description="유형에 따라 어디까지 설명이 필요한지가 달라집니다."
+          description="유형에 따라 어디까지 설명이 필요한지가 달라져요. 이 글을 누군가 언제 찾아 읽게 될지로 골라주세요."
         >
           <ChoiceList
             options={options.doc_types}
