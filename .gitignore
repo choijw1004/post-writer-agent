@@ -1,0 +1,53 @@
+# ── 환경 변수 / 시크릿 ──
+.env
+.env.*
+!.env.example
+*.key
+*.pem
+
+# ── 가상환경 ──
+.venv/
+venv/
+env/
+ENV/
+
+# ── Python ──
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+build/
+dist/
+*.egg-info/
+.eggs/
+
+# ── 테스트 / 린트 캐시 ──
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.coverage
+.coverage.*
+htmlcov/
+.tox/
+.nox/
+
+# ── Jupyter / IPython ──
+.ipynb_checkpoints/
+profile_default/
+ipython_config.py
+
+# ── 에디터 / IDE ──
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# ── OS ──
+.DS_Store
+Thumbs.db
+
+# ── 로그 / 임시 파일 ──
+*.log
+logs/
+tmp/
+.cache/
