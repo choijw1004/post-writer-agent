@@ -10,7 +10,7 @@
 venv/
 env/
 ENV/
-
+docs/
 # ── Python ──
 __pycache__/
 *.py[cod]
@@ -51,3 +51,8 @@ Thumbs.db
 logs/
 tmp/
 .cache/
+
+# ── 생성물 ──
+out/
+db/           # CrewAI 텔레메트리·메모리 로컬 저장소
+.crewai/

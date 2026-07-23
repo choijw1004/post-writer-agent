@@ -1,0 +1,9 @@
+crewai==1.15.5
+openai==2.47.0
+tiktoken==0.13.0
+python-dotenv
+pydantic==2.12.5
+
+# 이후 단계(FastAPI로 감싸기)에서 사용
+fastapi
+uvicorn
