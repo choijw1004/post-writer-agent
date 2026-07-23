@@ -5,10 +5,17 @@ const MESSAGE = {
   load: '기존 글을 읽고 있어요',
   analyze: '문체를 분석하고 있어요',
   write: '초안을 쓰고 있어요',
-  edit: '읽어보며 검토하고 있어요',
+  check: '형식을 검사하고 있어요',
+  edit: '읽어보며 짚어내고 있어요',
 }
 
-export default function GeneratingView({ done, current, styleGuide, sampleTitles }) {
+export default function GeneratingView({
+  stages,
+  done,
+  current,
+  styleGuide,
+  sampleTitles,
+}) {
   return (
     <div className="step-in mx-auto w-full max-w-[560px] px-6 pt-24 pb-24">
       <h1 className="text-center text-[22px] font-bold tracking-[-0.02em]">
@@ -16,7 +23,7 @@ export default function GeneratingView({ done, current, styleGuide, sampleTitles
       </h1>
 
       <div className="mt-12">
-        <ProgressDots done={done} current={current} />
+        <ProgressDots stages={stages} done={done} current={current} />
       </div>
 
       {/* 분석이 끝나는 즉시 결과를 띄운다. 초안을 기다리는 동안 빈 화면을

@@ -24,52 +24,15 @@ function CopyButton({ text }) {
   )
 }
 
-// 편집자 지적. '수정 제안'이지 '수정된 원고'가 아니다.
-// 무엇을 반영할지는 사람이 정한다.
-function EditNotes({ report }) {
-  return (
-    <div className="rounded-2xl border border-line p-6">
-      <div className="flex items-baseline justify-between">
-        <h2 className="text-[15px] font-bold">수정 제안</h2>
-        <span className="text-[13px] text-ink-sub">{report.notes.length}건</span>
-      </div>
-
-      <p className="mt-2 text-[13px] leading-[1.6] text-ink-sub">
-        원고를 대신 고치지 않고 지적만 합니다. 반영 여부는 직접 정하세요.
-      </p>
-
-      {report.notes.length === 0 ? (
-        <p className="mt-6 text-[14px] text-ink-sub">지적 사항이 없습니다.</p>
-      ) : (
-        <ol className="mt-6 space-y-5">
-          {report.notes.map((note, i) => (
-            <li key={i} className="border-t border-line pt-5 first:border-0 first:pt-0">
-              <p className="text-[13px] font-medium text-brand-dark">
-                {note.location}
-              </p>
-              <p className="mt-1.5 text-[14px] leading-[1.6]">{note.problem}</p>
-              <p className="mt-2 rounded-xl bg-surface px-3.5 py-2.5 text-[13px] leading-[1.6] text-ink-sub">
-                {note.suggestion}
-              </p>
-            </li>
-          ))}
-        </ol>
-      )}
-
-      {report.overall && (
-        <p className="mt-6 border-t border-line pt-5 text-[13px] leading-[1.6] text-ink-sub">
-          {report.overall}
-        </p>
-      )}
-    </div>
-  )
-}
-
-export default function ResultView({ result, model, onRestart }) {
-  const { draft_markdown: draft, edit_report: report, usage } = result
+// 이 화면의 할 일은 하나다. 읽고, 복사한다.
+// 검토 결과를 나란히 두지 않는 이유: 정작 읽어야 할 초안이 좁은 컬럼에
+// 갇히고, 아직 읽지도 않은 글에 대한 지적을 먼저 보게 된다.
+// 다듬기가 필요하면 아래 버튼으로 넘어간다.
+export default function ResultView({ result, model, onRestart, onReview }) {
+  const { draft_markdown: draft, usage } = result
 
   return (
-    <div className="step-in mx-auto w-full max-w-[1080px] px-6 pt-16 pb-24">
+    <div className="step-in mx-auto w-full max-w-[760px] px-6 pt-16 pb-24">
       <div className="flex flex-wrap items-center justify-between gap-4">
         <h1 className="text-[26px] font-bold tracking-[-0.02em]">초안이 나왔습니다</h1>
         <div className="flex gap-2">
@@ -84,16 +47,23 @@ export default function ResultView({ result, model, onRestart }) {
         </div>
       </div>
 
-      {/* 초안과 지적 목록을 나란히 둔다. 좁은 화면에서는 세로로 쌓인다. */}
-      <div className="mt-10 grid gap-6 lg:grid-cols-[minmax(0,1.6fr)_minmax(0,1fr)]">
-        <article className="rounded-2xl border border-line p-8">
-          <div className="prose-blog">
-            <Markdown remarkPlugins={[remarkGfm]}>{draft}</Markdown>
-          </div>
-        </article>
+      <article className="mt-10 rounded-2xl border border-line p-8">
+        <div className="prose-blog">
+          <Markdown remarkPlugins={[remarkGfm]}>{draft}</Markdown>
+        </div>
+      </article>
 
-        <EditNotes report={report} />
-      </div>
+      {/* 복사해서 다시 붙여넣게 하지 않는다. 이 초안을 그대로 넘긴다. */}
+      <button
+        type="button"
+        onClick={() => onReview(draft)}
+        className="mt-6 w-full rounded-2xl border border-line px-6 py-5 text-left transition-all duration-200 hover:border-brand hover:bg-brand-soft active:scale-[0.99]"
+      >
+        <span className="block text-[16px] font-semibold">이 초안 다듬기</span>
+        <span className="mt-1 block text-[13px] text-ink-sub">
+          오타와 논리 문제를 짚어봅니다
+        </span>
+      </button>
 
       <div className="mt-6">
         <TokenPanel usage={usage} model={model} />

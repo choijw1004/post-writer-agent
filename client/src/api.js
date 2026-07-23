@@ -13,12 +13,22 @@ export function fetchOptions() {
   return fetch('/api/options').then(json)
 }
 
-export function createJob(body) {
-  return fetch('/api/jobs', {
+function post(path, body) {
+  return fetch(path, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(body),
   }).then(json)
+}
+
+// 초안 작성
+export function createJob(body) {
+  return post('/api/jobs', body)
+}
+
+// 글 다듬기
+export function createReview(body) {
+  return post('/api/reviews', body)
 }
 
 /**
@@ -27,10 +37,12 @@ export function createJob(body) {
  * SSE 를 먼저 쓰고, 연결이 열리지 않으면 폴링으로 내려간다. 서버가 두 경로를
  * 모두 열어둔 이유가 이것이다(발표 당일 SSE 가 막히는 경우 대비).
  *
+ * 초안 작성(/api/jobs)과 다듬기(/api/reviews)가 같은 구조라 base 만 다르다.
+ *
  * @returns {() => void} 구독 해제 함수
  */
-export function subscribeJob(jobId, { onProgress, onResult, onError }) {
-  const source = new EventSource(`/api/jobs/${jobId}/stream`)
+export function subscribeJob(jobId, { onProgress, onResult, onError, base = '/api/jobs' }) {
+  const source = new EventSource(`${base}/${jobId}/stream`)
   let settled = false
   let pollTimer = null
 
@@ -66,7 +78,7 @@ export function subscribeJob(jobId, { onProgress, onResult, onError }) {
     let sent = 0
     pollTimer = setInterval(async () => {
       try {
-        const res = await fetch(`/api/jobs/${jobId}`)
+        const res = await fetch(`${base}/${jobId}`)
         const job = await res.json()
         job.events.slice(sent).forEach((event) => {
           sent += 1
