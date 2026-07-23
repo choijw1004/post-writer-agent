@@ -68,6 +68,30 @@ curl -X POST localhost:8000/api/jobs -H 'Content-Type: application/json' -d '{
 curl -N localhost:8000/api/jobs/<job_id>/stream
 ```
 
+## 화면 (React)
+
+백엔드를 8000 포트에 띄운 상태에서:
+
+```bash
+cd client
+npm install
+npm run dev        # http://localhost:5173
+```
+
+`/api` 는 vite 프록시가 8000 으로 넘긴다. 개발 중에도 같은 오리진이라 CORS 도,
+EventSource 의 크로스 오리진 제약도 신경 쓸 일이 없다.
+
+디자인은 토스 방향을 따랐다.
+
+- **한 화면에 한 가지만 묻는다.** 소스 → 주제 → 독자 → 목적 → 분량 5단계.
+  선택형은 고르는 즉시 다음으로 넘어간다.
+- **여백이 인상의 8할.** 간격은 `StepShell` 한 곳에서만 정한다.
+- **색은 파랑 하나.** 주요 버튼과 진행 표시에만 쓴다.
+- **진행 표시는 점 3개.** 에이전트 로그를 늘어놓지 않는다.
+- **문체 분석 결과는 분석 단계가 끝나는 즉시 뜬다.** 초안을 기다리는 동안
+  빈 화면을 보지 않아도 되고, 이 앱의 데모 포인트이기도 하다.
+- **토큰 사용량은 결과 화면 하단 접힌 영역.** 발표 때만 펼친다.
+
 ## 구조
 
 ```
@@ -82,6 +106,11 @@ server/
   api.py           FastAPI 앱 (HTTP 처리만, 생성 로직 없음)
   jobs.py          백그라운드 job 실행·진행 이벤트 수집
   schemas.py       HTTP 경계 전용 요청/응답 스키마
+client/
+  src/App.jsx      단계 흐름과 상태 (일반적인 useState 방식)
+  src/api.js       서버와 이야기하는 유일한 곳 (SSE, 실패 시 폴링)
+  src/components/  StepShell, ChoiceList, ProgressDots, StyleGuideCard,
+                   ResultView, TokenPanel …
 scripts/
   token_compare.py 한/영 토큰 수 비교 실험
 sample_posts/      데모용 마크다운 3편
@@ -108,7 +137,7 @@ sample_posts/      데모용 마크다운 3편
 - [x] 로컬 md 로드 → 문체 분석 → 초안 생성 → 편집 (CLI 완주)
 - [x] 토큰 측정
 - [x] FastAPI로 감싸기 (SSE + 폴링)
-- [ ] React UI (토스 스타일)
+- [x] React UI (토스 스타일)
 - [ ] velog API 연동
 - [ ] 템플릿 경로 (글 없는 사용자)
 - [ ] 후속 수정 대화
