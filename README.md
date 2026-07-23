@@ -22,9 +22,8 @@ echo "OPENAI_API_KEY=sk-..." > .env
 .venv/bin/python -m server.cli \
   --path ./sample_posts \
   --topic "FastAPI 의존성 주입으로 DB 세션 관리하기" \
-  --audience "주니어 개발자" \
-  --purpose "학습 정리" \
-  --length "짧게" \
+  --type "학습 중심 문서" \
+  --tone "경어체" \
   --out ./out/draft.md
 ```
 
@@ -34,17 +33,21 @@ velog 에서 불러오려면:
 .venv/bin/python -m server.cli \
   --source velog --username velopert \
   --topic "리액트 상태 관리를 고르는 기준" \
-  --audience "동료 개발자" --purpose "학습 정리" --length "짧게"
+  --type "설명 문서" --tone "구어체"
 ```
 
 | 옵션 | 값 |
 |---|---|
-| `--source` | `local` / `velog` (구현됨) / `template` (미구현) |
+| `--source` | `local` / `velog` / `template` (쓴 글 없음 — 기본 문체, 분석 생략) |
 | `--path` | local 소스의 마크다운 폴더 |
 | `--username` | velog 소스의 사용자명 (@ 없이) |
-| `--audience` | 주니어 개발자 / 동료 개발자 / 비개발자 / 일반 독자 |
-| `--purpose` | 학습 정리 / 트러블슈팅 공유 / 회고 / 튜토리얼 |
-| `--length` | 짧게 / 보통 / 길게 |
+| `--type` | 학습 중심 문서 / 문제 해결 문서 / 참조 문서 / 설명 문서 (`docs/type.md`) |
+| `--tone` | 경어체 / 구어체 |
+| `--material` | 글의 재료: 겪은 일·메모·코드 조각 (선택) |
+| `--material-file` | 재료를 파일에서 읽기 (`--material` 보다 우선) |
+
+독자와 분량 옵션은 없다. 독자는 문서 유형에 담겨 있고, 분량은 유형 템플릿과
+"소제목 최소 8개" 규칙이 정한다.
 
 한/영 토큰 비교 실험 (발표자료용):
 
@@ -63,7 +66,7 @@ velog 에서 불러오려면:
 | 메서드 | 경로 | 설명 |
 |---|---|---|
 | `GET` | `/api/health` | 상태·모델명 |
-| `GET` | `/api/options` | 독자/목적/분량 선택지 (프론트가 하드코딩하지 않게) |
+| `GET` | `/api/options` | 문서 유형/말투 선택지 (프론트가 하드코딩하지 않게) |
 | `POST` | `/api/jobs` | 생성 작업 시작 → `202 {job_id}` |
 | | | `source_type`: `upload`(브라우저가 읽은 md) / `local`(서버 경로) / `velog` |
 | `GET` | `/api/jobs/{id}` | 폴링: 진행 이벤트 + 완료 시 결과 |
@@ -77,7 +80,8 @@ SSE 가 막히는 환경을 대비해 폴링 경로도 함께 열어 둔다.
 curl -X POST localhost:8000/api/jobs -H 'Content-Type: application/json' -d '{
   "source_type": "local", "path": "./sample_posts",
   "topic": "파이썬 타입 힌트 도입기",
-  "audience": "동료 개발자", "purpose": "회고", "length": "짧게"
+  "doc_type": "설명 문서", "tone": "경어체",
+  "material": "mypy 도입 첫 주에 에러 400개. 점진 도입으로 전환한 이야기"
 }'
 curl -N localhost:8000/api/jobs/<job_id>/stream
 ```
@@ -109,8 +113,8 @@ EventSource 의 크로스 오리진 제약도 신경 쓸 일이 없다.
 
 디자인은 토스 방향을 따랐다.
 
-- **한 화면에 한 가지만 묻는다.** 소스 → 주제 → 독자 → 목적 → 분량 5단계.
-  선택형은 고르는 즉시 다음으로 넘어간다.
+- **한 화면에 한 가지만 묻는다.** 소스 → 주제 → 재료(선택) → 문서 유형 →
+  말투 5단계. 선택형은 고르는 즉시 다음으로 넘어간다.
 - **강조색은 초록 하나.** 제품 이름이 초록이라 docs.md 의 파랑 대신 초록을
   썼다. `src/index.css` 의 `--color-brand` 세 줄만 바꾸면 파랑으로 돌아간다.
 - **여백이 인상의 8할.** 간격은 `StepShell` 한 곳에서만 정한다.
@@ -189,5 +193,5 @@ velog 가 죽어도 로컬 md 경로는 영향받지 않는다. 소스 분기는
 - [x] FastAPI로 감싸기 (SSE + 폴링)
 - [x] React UI (토스 스타일)
 - [x] velog API 연동
-- [ ] 템플릿 경로 (글 없는 사용자)
+- [x] 템플릿 경로 (글 없는 사용자 — 기본 문체로 분석 생략, 토큰 0)
 - [ ] 후속 수정 대화
