@@ -1,15 +1,17 @@
 @import 'tailwindcss';
 
 /* 색은 아낀다. 배경은 흰색/아주 연한 회색, 글자는 검정·회색,
-   강조는 파랑 하나뿐이고 그 파랑은 주요 버튼과 진행 표시에만 쓴다. */
+   강조는 하나뿐이고 그 하나는 주요 버튼과 진행 표시에만 쓴다.
+   제품 이름이 '초록'이라 그 하나를 초록으로 둔다. 파랑으로 되돌리려면
+   아래 세 줄만 바꾸면 된다(#3182f6 / #1b64da / #f0f6ff). */
 @theme {
   --font-sans:
     'Pretendard Variable', Pretendard, -apple-system, BlinkMacSystemFont,
     system-ui, sans-serif;
 
-  --color-brand: #3182f6;
-  --color-brand-dark: #1b64da;
-  --color-brand-soft: #f0f6ff;
+  --color-brand: #16a34a;
+  --color-brand-dark: #15803d;
+  --color-brand-soft: #f0fdf4;
 
   --color-ink: #191f28;
   --color-ink-sub: #8b95a1;
