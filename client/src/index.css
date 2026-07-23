@@ -1,0 +1,143 @@
+@import 'tailwindcss';
+
+/* 색은 아낀다. 배경은 흰색/아주 연한 회색, 글자는 검정·회색,
+   강조는 파랑 하나뿐이고 그 파랑은 주요 버튼과 진행 표시에만 쓴다. */
+@theme {
+  --font-sans:
+    'Pretendard Variable', Pretendard, -apple-system, BlinkMacSystemFont,
+    system-ui, sans-serif;
+
+  --color-brand: #3182f6;
+  --color-brand-dark: #1b64da;
+  --color-brand-soft: #f0f6ff;
+
+  --color-ink: #191f28;
+  --color-ink-sub: #8b95a1;
+  --color-line: #e5e8eb;
+  --color-surface: #f9fafb;
+}
+
+html {
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+body {
+  margin: 0;
+  font-family: var(--font-sans);
+  color: var(--color-ink);
+  background: #fff;
+  word-break: keep-all; /* 한글이 단어 중간에서 끊기지 않게 */
+}
+
+/* 단계가 바뀔 때만 짧게. 200ms 안팎을 넘기지 않는다. */
+@keyframes step-in {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+.step-in {
+  animation: step-in 220ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .step-in {
+    animation: none;
+  }
+}
+
+/* 생성된 초안 마크다운. typography 플러그인을 얹는 대신 필요한 것만 적는다.
+   본문 타이포는 읽기 위한 것이라 UI 보다 살짝 크고 행간이 넓다. */
+.prose-blog {
+  font-size: 16px;
+  line-height: 1.75;
+}
+.prose-blog > * + * {
+  margin-top: 1.15em;
+}
+.prose-blog h1 {
+  font-size: 26px;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  line-height: 1.35;
+}
+.prose-blog h2 {
+  font-size: 19px;
+  font-weight: 700;
+  margin-top: 2.2em;
+}
+.prose-blog h3 {
+  font-size: 16px;
+  font-weight: 700;
+  margin-top: 1.8em;
+}
+.prose-blog ul,
+.prose-blog ol {
+  padding-left: 1.3em;
+}
+.prose-blog ul {
+  list-style: disc;
+}
+.prose-blog ol {
+  list-style: decimal;
+}
+.prose-blog li + li {
+  margin-top: 0.4em;
+}
+.prose-blog a {
+  color: var(--color-brand-dark);
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+.prose-blog strong {
+  font-weight: 700;
+}
+.prose-blog blockquote {
+  border-left: 3px solid var(--color-line);
+  padding-left: 1em;
+  color: var(--color-ink-sub);
+}
+.prose-blog code {
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: 0.88em;
+  background: var(--color-surface);
+  border: 1px solid var(--color-line);
+  border-radius: 6px;
+  padding: 0.12em 0.36em;
+}
+.prose-blog pre {
+  background: var(--color-surface);
+  border: 1px solid var(--color-line);
+  border-radius: 14px;
+  padding: 1.15em 1.3em;
+  overflow-x: auto; /* 긴 코드가 페이지를 가로로 늘리지 않게 */
+  font-size: 13.5px;
+  line-height: 1.6;
+}
+.prose-blog pre code {
+  background: none;
+  border: 0;
+  padding: 0;
+  font-size: inherit;
+}
+.prose-blog table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 14px;
+}
+.prose-blog th,
+.prose-blog td {
+  border: 1px solid var(--color-line);
+  padding: 0.5em 0.75em;
+  text-align: left;
+}
+.prose-blog hr {
+  border: 0;
+  border-top: 1px solid var(--color-line);
+}
