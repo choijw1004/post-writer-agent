@@ -117,6 +117,8 @@ class ProgressEvent(BaseModel):
     stage: str
     status: str
     message: str = ""
+    # 그 단계가 만들어낸 중간 산출물. 화면은 이걸로 분석 결과를 먼저 그린다.
+    data: dict | None = None
 
 
 class JobCreated(BaseModel):

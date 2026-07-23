@@ -24,14 +24,21 @@ STAGE_LABEL = {
 }
 
 
-def progress(stage: str, status: str) -> None:
+def progress(stage: str, status: str, data: dict | None = None) -> None:
     label = STAGE_LABEL.get(stage, stage)
     if status == "start":
         print(f"  ▶ {label} …", flush=True)
-    elif status == "done":
-        print(f"  ✓ {label} 완료", flush=True)
-    else:
-        print(f"  ✓ {label}: {status}", flush=True)
+        return
+
+    if stage == "load" and data:
+        detail = (
+            f"글 {data['found']}편 중 {data['selected']}편 선택"
+            f" ({data['sample_tokens']:,} 토큰)"
+        )
+        print(f"  ✓ {label}: {detail}", flush=True)
+        return
+
+    print(f"  ✓ {label} 완료", flush=True)
 
 
 def print_result(result: PipelineResult) -> None:

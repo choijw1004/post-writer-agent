@@ -32,8 +32,16 @@ class Job:
     result: PipelineResult | None = None
     error: str | None = None
 
-    def emit(self, stage: str, status: str, message: str = "") -> None:
-        self.events.append({"stage": stage, "status": status, "message": message})
+    def emit(
+        self,
+        stage: str,
+        status: str,
+        message: str = "",
+        data: dict | None = None,
+    ) -> None:
+        self.events.append(
+            {"stage": stage, "status": status, "message": message, "data": data}
+        )
 
 
 class JobStore:
@@ -77,10 +85,8 @@ def start_job(
                 audience=audience,
                 purpose=purpose,
                 length=length,
-                on_progress=lambda stage, status: job.emit(
-                    stage,
-                    status if status in {"start", "done"} else "info",
-                    "" if status in {"start", "done"} else status,
+                on_progress=lambda stage, status, data=None: job.emit(
+                    stage, status, data=data
                 ),
             )
         except Exception as exc:  # noqa: BLE001 - 어떤 실패든 job 상태로 옮긴다

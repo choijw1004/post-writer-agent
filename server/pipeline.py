@@ -26,10 +26,12 @@ from server.models import (
 )
 from server.sources import load_posts
 
-ProgressFn = Callable[[str, str], None]  # (stage, status)
+# (stage, status, data) — data 는 그 단계가 만들어낸 중간 산출물이다.
+# 화면은 파이프라인이 다 끝나기를 기다리지 않고 단계별로 결과를 보여준다.
+ProgressFn = Callable[[str, str, dict | None], None]
 
 
-def _noop(stage: str, status: str) -> None:
+def _noop(stage: str, status: str, data: dict | None = None) -> None:
     pass
 
 
@@ -76,7 +78,13 @@ def run_pipeline(
     samples, sample_tokens = tokens.select_style_samples(posts)
     on_progress(
         "load",
-        f"글 {len(posts)}편 중 {len(samples)}편 선택 ({sample_tokens:,} 토큰)",
+        "done",
+        {
+            "found": len(posts),
+            "selected": len(samples),
+            "sample_titles": [p.title for p in samples],
+            "sample_tokens": sample_tokens,
+        },
     )
 
     # ── 1. 분석가 ────────────────────────────────────────────────────
@@ -91,7 +99,8 @@ def run_pipeline(
     style_guide = analysis_out.pydantic
     if not isinstance(style_guide, StyleGuide):
         raise RuntimeError("분석가가 StyleGuide 형식을 반환하지 않았습니다.")
-    on_progress("analyze", "done")
+    # 문체 분석 결과는 작가가 글을 다 쓸 때까지 기다리지 않고 바로 내보낸다.
+    on_progress("analyze", "done", {"style_guide": style_guide.model_dump()})
 
     # ── 2. 작가 ──────────────────────────────────────────────────────
     # 작가에게 넘어가는 것은 style_guide 와 brief 뿐이다. 원문도, 소스 종류도
@@ -105,7 +114,7 @@ def run_pipeline(
         usages,
     )
     draft = _strip_code_fence(writing_out.raw)
-    on_progress("write", "done")
+    on_progress("write", "done", {"draft_markdown": draft})
 
     # ── 3. 편집자 ────────────────────────────────────────────────────
     on_progress("edit", "start")
@@ -119,7 +128,7 @@ def run_pipeline(
     edit_report = editing_out.pydantic
     if not isinstance(edit_report, EditReport):
         edit_report = EditReport(notes=[], overall=editing_out.raw.strip())
-    on_progress("edit", "done")
+    on_progress("edit", "done", {"edit_report": edit_report.model_dump()})
 
     return PipelineResult(
         style_guide=style_guide,
