@@ -30,6 +30,12 @@ LENGTH_SPEC = {
     "길게": "3000~4500자, 소제목 5개 이상",
 }
 
+# ── 폴더 업로드 ────────────────────────────────────────────────────────
+# 브라우저가 폴더의 md 를 읽어 보낸다. 어차피 토큰 예산이 몇 편만 남기므로
+# 요청 자체를 크게 받을 이유가 없다. 넘치면 앞에서부터 자른다.
+UPLOAD_MAX_FILES = int(os.getenv("UPLOAD_MAX_FILES", "40"))
+UPLOAD_MAX_CHARS = int(os.getenv("UPLOAD_MAX_CHARS", "400000"))
+
 # ── velog (비공식 API) ─────────────────────────────────────────────────
 VELOG_API_URL = os.getenv("VELOG_API_URL", "https://v3.velog.io/graphql")
 VELOG_TIMEOUT = float(os.getenv("VELOG_TIMEOUT", "15"))

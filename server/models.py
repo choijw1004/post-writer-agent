@@ -11,7 +11,7 @@ from typing import Literal
 
 from pydantic import BaseModel, Field
 
-SourceType = Literal["local", "velog", "template"]
+SourceType = Literal["local", "upload", "velog", "template"]
 
 
 @dataclass
@@ -31,6 +31,9 @@ class SourceSpec:
     path: str | None = None  # local: md 폴더 경로
     username: str | None = None  # velog: 사용자명
     template: str | None = None  # template: 템플릿 키
+    # upload: 브라우저가 폴더에서 읽어 보낸 글. 서버가 사용자 파일시스템을
+    # 뒤지지 않아도 되고, 서버와 브라우저가 다른 기계여도 동작한다.
+    posts: list[Post] | None = None
 
 
 @dataclass

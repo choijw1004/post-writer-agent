@@ -20,6 +20,7 @@ from fastapi.responses import StreamingResponse
 
 from server import config, jobs
 from server.models import SourceSpec
+from server.sources import parse_markdown
 from server.schemas import (
     GenerateRequest,
     JobCreated,
@@ -66,11 +67,24 @@ def options() -> OptionsResponse:
 @app.post("/api/jobs", response_model=JobCreated, status_code=202)
 def create_job(req: GenerateRequest) -> JobCreated:
     """생성 작업을 만들고 즉시 job_id 를 돌려준다(비동기)."""
+    # 업로드된 마크다운은 여기서 Post 로 바꾼다. 파싱 규칙(제목 찾는 순서 등)은
+    # 로컬 폴더를 직접 읽을 때와 같은 함수를 쓴다.
+    posts = None
+    if req.source_type == "upload":
+        parsed = [parse_markdown(f.name, f.content) for f in req.files]
+        posts = [p for p in parsed if p is not None]
+        if not posts:
+            raise HTTPException(
+                status_code=422,
+                detail="선택한 폴더의 마크다운이 모두 비어 있습니다.",
+            )
+
     source = SourceSpec(
         type=req.source_type,
         path=req.path,
         username=req.username,
         template=req.template,
+        posts=posts,
     )
     job = jobs.start_job(
         source=source,

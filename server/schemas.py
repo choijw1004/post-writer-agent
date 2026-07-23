@@ -15,9 +15,20 @@ from server import config
 from server.models import PipelineResult
 
 
+class UploadedFile(BaseModel):
+    """브라우저가 폴더에서 읽어 보낸 마크다운 하나."""
+
+    name: str
+    content: str
+
+
 class GenerateRequest(BaseModel):
-    source_type: Literal["local", "velog", "template"] = "local"
+    source_type: Literal["local", "upload", "velog", "template"] = "upload"
     path: str | None = Field(default=None, description="local 소스: 마크다운 폴더 경로")
+    files: list[UploadedFile] = Field(
+        default_factory=list, description="upload 소스: 폴더에서 읽은 마크다운"
+    )
+    folder_name: str | None = Field(default=None, description="upload 소스: 폴더 이름")
     username: str | None = Field(default=None, description="velog 소스: 사용자명")
     template: str | None = Field(default=None, description="template 소스: 템플릿 키")
 
@@ -38,6 +49,20 @@ class GenerateRequest(BaseModel):
             raise ValueError("local 소스는 path 가 필요합니다.")
         if self.source_type == "velog" and not self.username:
             raise ValueError("velog 소스는 username 이 필요합니다.")
+        if self.source_type == "upload":
+            if not self.files:
+                raise ValueError("선택한 폴더에서 마크다운 파일을 찾지 못했습니다.")
+            if len(self.files) > config.UPLOAD_MAX_FILES:
+                raise ValueError(
+                    f"마크다운이 너무 많습니다 (최대 {config.UPLOAD_MAX_FILES}개). "
+                    "글이 더 적은 폴더를 골라 주세요."
+                )
+            total = sum(len(f.content) for f in self.files)
+            if total > config.UPLOAD_MAX_CHARS:
+                raise ValueError(
+                    f"글이 너무 큽니다 ({total:,}자, 최대 "
+                    f"{config.UPLOAD_MAX_CHARS:,}자)."
+                )
         return self
 
 
