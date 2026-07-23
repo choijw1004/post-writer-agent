@@ -25,10 +25,20 @@ echo "OPENAI_API_KEY=sk-..." > .env
   --out ./out/draft.md
 ```
 
+velog 에서 불러오려면:
+
+```bash
+.venv/bin/python -m server.cli \
+  --source velog --username velopert \
+  --topic "리액트 상태 관리를 고르는 기준" \
+  --audience "동료 개발자" --purpose "학습 정리" --length "짧게"
+```
+
 | 옵션 | 값 |
 |---|---|
-| `--source` | `local` (구현됨) / `velog` / `template` (미구현) |
+| `--source` | `local` / `velog` (구현됨) / `template` (미구현) |
 | `--path` | local 소스의 마크다운 폴더 |
+| `--username` | velog 소스의 사용자명 (@ 없이) |
 | `--audience` | 주니어 개발자 / 동료 개발자 / 비개발자 / 일반 독자 |
 | `--purpose` | 학습 정리 / 트러블슈팅 공유 / 회고 / 튜토리얼 |
 | `--length` | 짧게 / 보통 / 길게 |
@@ -101,7 +111,7 @@ server/
   tasks.py         Task description (ReAct 절차 명시)
   models.py        StyleGuide, EditReport 등 내부 자료구조
   tokens.py        토큰 계측 + 샘플 토큰 예산
-  sources/         소스별 로더 (local_md 구현)
+  sources/         소스별 로더 (local_md, velog)
   cli.py           CLI 인터페이스
   api.py           FastAPI 앱 (HTTP 처리만, 생성 로직 없음)
   jobs.py          백그라운드 job 실행·진행 이벤트 수집
@@ -115,6 +125,28 @@ scripts/
   token_compare.py 한/영 토큰 수 비교 실험
 sample_posts/      데모용 마크다운 3편
 ```
+
+## velog 연동 주의
+
+velog 는 공개 API 가 없어서 웹 클라이언트가 쓰는 GraphQL 엔드포인트
+(`https://v3.velog.io/graphql`)를 그대로 부른다. 예고 없이 바뀔 수 있다.
+실제로 인자 형태가 플랫 인자에서 `input` 객체로 바뀐 적이 있다.
+
+```graphql
+query Posts($input: GetPostsInput!) { posts(input: $input) { id title url_slug } }
+query Post($input: ReadPostInput!)  { post(input: $input)  { id title body } }
+```
+
+깨졌을 때는 introspection 으로 현재 스키마를 확인하고
+`server/sources/velog.py` 의 쿼리만 고치면 된다.
+
+```bash
+curl -s https://v3.velog.io/graphql -H 'Content-Type: application/json' \
+  -d '{"query":"{__type(name:\"GetPostsInput\"){inputFields{name}}}"}'
+```
+
+velog 가 죽어도 로컬 md 경로는 영향받지 않는다. 소스 분기는
+`server/sources/__init__.py` 한 곳에만 있다.
 
 ## 설계 메모 (수업 개념 연결)
 
@@ -138,6 +170,6 @@ sample_posts/      데모용 마크다운 3편
 - [x] 토큰 측정
 - [x] FastAPI로 감싸기 (SSE + 폴링)
 - [x] React UI (토스 스타일)
-- [ ] velog API 연동
+- [x] velog API 연동
 - [ ] 템플릿 경로 (글 없는 사용자)
 - [ ] 후속 수정 대화
