@@ -22,7 +22,7 @@ STYLE_SAMPLE_TOKEN_BUDGET = int(os.getenv("STYLE_SAMPLE_TOKEN_BUDGET", "6000"))
 PER_POST_TOKEN_CAP = int(os.getenv("PER_POST_TOKEN_CAP", "1200"))
 
 # 예산이 남아도 이 개수를 넘기지 않는다(지시 희석 방지).
-MAX_STYLE_SAMPLES = int(os.getenv("MAX_STYLE_SAMPLES", "5"))
+MAX_STYLE_SAMPLES = int(os.getenv("MAX_STYLE_SAMPLES", "10"))
 
 # ── 말투 ──────────────────────────────────────────────────────────────
 # 분량은 옵션에서 뺐다. 글의 길이는 문서 유형(doc_types.py)의 템플릿과
