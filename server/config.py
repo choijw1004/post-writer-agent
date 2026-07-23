@@ -30,6 +30,14 @@ LENGTH_SPEC = {
     "길게": "3000~4500자, 소제목 5개 이상",
 }
 
+# ── velog (비공식 API) ─────────────────────────────────────────────────
+VELOG_API_URL = os.getenv("VELOG_API_URL", "https://v3.velog.io/graphql")
+VELOG_TIMEOUT = float(os.getenv("VELOG_TIMEOUT", "15"))
+
+# 목록과 본문이 별도 쿼리라 글 수만큼 요청이 나간다. 어차피 뒤에서 토큰
+# 예산으로 더 줄어들기 때문에 애초에 최근 몇 편만 가져온다.
+VELOG_FETCH_LIMIT = int(os.getenv("VELOG_FETCH_LIMIT", "8"))
+
 # 사용자 입력 선택지. CLI 와 API 가 같은 목록을 공유한다.
 AUDIENCES = ["주니어 개발자", "동료 개발자", "비개발자", "일반 독자"]
 PURPOSES = ["학습 정리", "트러블슈팅 공유", "회고", "튜토리얼"]

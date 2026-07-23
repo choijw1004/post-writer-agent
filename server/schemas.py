@@ -36,6 +36,8 @@ class GenerateRequest(BaseModel):
             raise ValueError(f"length 는 {config.LENGTHS} 중 하나여야 합니다.")
         if self.source_type == "local" and not self.path:
             raise ValueError("local 소스는 path 가 필요합니다.")
+        if self.source_type == "velog" and not self.username:
+            raise ValueError("velog 소스는 username 이 필요합니다.")
         return self
 
 

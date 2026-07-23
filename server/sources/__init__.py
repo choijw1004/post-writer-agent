@@ -2,6 +2,7 @@
 
 from server.models import Post, SourceSpec
 from server.sources.local_md import load_local_posts
+from server.sources.velog import VelogError, load_velog_posts
 
 
 def load_posts(source: SourceSpec) -> list[Post]:
@@ -16,10 +17,9 @@ def load_posts(source: SourceSpec) -> list[Post]:
         return load_local_posts(source.path)
 
     if source.type == "velog":
-        # 구현 우선순위 5번. 비공식 GraphQL API라 로컬 경로를 먼저 완성한다.
-        raise NotImplementedError(
-            "velog 소스는 아직 미구현입니다. --source local 로 실행하세요."
-        )
+        if not source.username:
+            raise ValueError("velog 소스는 username 이 필요합니다.")
+        return load_velog_posts(source.username)
 
     if source.type == "template":
         # 구현 우선순위 6번.
@@ -30,4 +30,4 @@ def load_posts(source: SourceSpec) -> list[Post]:
     raise ValueError(f"알 수 없는 소스 타입: {source.type}")
 
 
-__all__ = ["load_posts", "load_local_posts"]
+__all__ = ["load_posts", "load_local_posts", "load_velog_posts", "VelogError"]

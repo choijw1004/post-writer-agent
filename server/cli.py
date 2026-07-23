@@ -15,6 +15,7 @@ from pathlib import Path
 from server import config, tokens
 from server.models import PipelineResult, SourceSpec
 from server.pipeline import run_pipeline
+from server.sources import VelogError
 
 STAGE_LABEL = {
     "load": "기존 글 로드",
@@ -88,6 +89,7 @@ def main(argv: list[str] | None = None) -> int:
         "--source", default="local", choices=["local", "velog", "template"]
     )
     parser.add_argument("--path", help="local 소스: 마크다운 폴더 경로")
+    parser.add_argument("--username", help="velog 소스: 사용자명 (@ 없이)")
     parser.add_argument("--topic", required=True, help="쓸 글의 주제")
     parser.add_argument("--audience", default="주니어 개발자", choices=config.AUDIENCES)
     parser.add_argument("--purpose", default="학습 정리", choices=config.PURPOSES)
@@ -95,7 +97,7 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("--out", help="초안 마크다운을 저장할 파일 경로")
     args = parser.parse_args(argv)
 
-    source = SourceSpec(type=args.source, path=args.path)
+    source = SourceSpec(type=args.source, path=args.path, username=args.username)
 
     print(f"주제: {args.topic}")
     print(f"독자: {args.audience} / 목적: {args.purpose} / 분량: {args.length}\n")
@@ -109,7 +111,13 @@ def main(argv: list[str] | None = None) -> int:
             length=args.length,
             on_progress=progress,
         )
-    except (FileNotFoundError, NotADirectoryError, ValueError, NotImplementedError) as e:
+    except (
+        FileNotFoundError,
+        NotADirectoryError,
+        ValueError,
+        NotImplementedError,
+        VelogError,
+    ) as e:
         print(f"\n오류: {e}", file=sys.stderr)
         return 1
 
