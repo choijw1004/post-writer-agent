@@ -6,7 +6,7 @@ const ENTRIES = [
     key: 'draft',
     title: '초안 작성',
     body: '기존 글에서 문체를 뽑아내 새 글의 초안을 씁니다.',
-    hint: '마크다운 폴더 또는 velog',
+    hint: '마크다운 폴더, velog, 아직 쓴 글이 없어도 OK',
   },
   {
     key: 'review',

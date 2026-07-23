@@ -32,7 +32,7 @@ const SOURCE_OPTIONS = [
 const SOURCE_HINT = {
   upload: 'GitHub Pages 블로그의 _posts 같은 폴더',
   velog: '사용자명으로 최근 글을 불러옵니다',
-  template: '준비 중',
+  template: '문체 분석 없이 기본 문체로 시작합니다',
 }
 
 const EMPTY_FORM = {
@@ -105,7 +105,7 @@ export default function DraftFlow({ options, model, onHome, onReview }) {
       ? Boolean(folder)
       : form.source_type === 'velog'
         ? Boolean(form.username.trim())
-        : false
+        : true // template: 필요한 입력이 없다
 
   return (
     <>
@@ -151,10 +151,14 @@ export default function DraftFlow({ options, model, onHome, onReview }) {
           )}
 
           {form.source_type === 'template' && (
-            <p className="mt-8 rounded-2xl bg-surface px-5 py-4 text-[14px] leading-[1.6] text-ink-sub">
-              아직 연결되지 않은 경로입니다. 지금은 마크다운 폴더나 velog 로만
-              생성할 수 있어요.
-            </p>
+            <div className="mt-8 space-y-6">
+              <p className="rounded-2xl bg-surface px-5 py-4 text-[14px] leading-[1.6] text-ink-sub">
+                담백한 기술 블로그 기본 문체로 씁니다. 문체 분석 단계를
+                건너뛰기 때문에 그만큼 빠르고, 토큰도 들지 않아요. 나중에 쓴
+                글이 쌓이면 그 글로 내 문체를 만들 수 있습니다.
+              </p>
+              <PrimaryButton onClick={next}>다음</PrimaryButton>
+            </div>
           )}
         </StepShell>
       )}

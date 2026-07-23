@@ -22,7 +22,7 @@ from typing import Callable
 
 from crewai import Crew, Process
 
-from server import checks, tasks, tokens
+from server import checks, style_presets, tasks, tokens
 from server.agents import analyst_agent, editor_agent, writer_agent
 from server.models import (
     BriefSpec,
@@ -80,35 +80,47 @@ def run_pipeline(
     brief = BriefSpec(topic=topic, doc_type=doc_type, tone=tone)
     usages: list = []
 
-    # ── 0. 소스 로드 + 토큰 예산으로 샘플 선별 ────────────────────────
-    on_progress("load", "start")
-    posts = load_posts(source)
-    samples, sample_tokens = tokens.select_style_samples(posts)
-    on_progress(
-        "load",
-        "done",
-        {
-            "found": len(posts),
-            "selected": len(samples),
-            "sample_titles": [p.title for p in samples],
-            "sample_tokens": sample_tokens,
-        },
-    )
+    if source.type == "template":
+        # 쓴 글이 없는 사용자. 분석할 원문이 없으므로 로드·분석을 건너뛰고
+        # 기본 문체를 쓴다. 토큰 0.
+        style_guide = style_presets.DEFAULT_STYLE_GUIDE
+        samples: list = []
+        sample_tokens = 0
+        on_progress(
+            "analyze",
+            "done",
+            {"style_guide": style_guide.model_dump(), "preset": True},
+        )
+    else:
+        # ── 0. 소스 로드 + 토큰 예산으로 샘플 선별 ────────────────────
+        on_progress("load", "start")
+        posts = load_posts(source)
+        samples, sample_tokens = tokens.select_style_samples(posts)
+        on_progress(
+            "load",
+            "done",
+            {
+                "found": len(posts),
+                "selected": len(samples),
+                "sample_titles": [p.title for p in samples],
+                "sample_tokens": sample_tokens,
+            },
+        )
 
-    # ── 1. 분석가 ────────────────────────────────────────────────────
-    on_progress("analyze", "start")
-    analyst = analyst_agent()
-    analysis_out = _run_stage(
-        analyst,
-        tasks.analysis_task(analyst, samples, brief),
-        "분석가",
-        usages,
-    )
-    style_guide = analysis_out.pydantic
-    if not isinstance(style_guide, StyleGuide):
-        raise RuntimeError("분석가가 StyleGuide 형식을 반환하지 않았습니다.")
-    # 문체 분석 결과는 작가가 글을 다 쓸 때까지 기다리지 않고 바로 내보낸다.
-    on_progress("analyze", "done", {"style_guide": style_guide.model_dump()})
+        # ── 1. 분석가 ────────────────────────────────────────────────
+        on_progress("analyze", "start")
+        analyst = analyst_agent()
+        analysis_out = _run_stage(
+            analyst,
+            tasks.analysis_task(analyst, samples, brief),
+            "분석가",
+            usages,
+        )
+        style_guide = analysis_out.pydantic
+        if not isinstance(style_guide, StyleGuide):
+            raise RuntimeError("분석가가 StyleGuide 형식을 반환하지 않았습니다.")
+        # 문체 분석 결과는 작가가 글을 다 쓸 때까지 기다리지 않고 바로 내보낸다.
+        on_progress("analyze", "done", {"style_guide": style_guide.model_dump()})
 
     # ── 2. 작가 ──────────────────────────────────────────────────────
     # 작가에게 넘어가는 것은 style_guide 와 brief 뿐이다. 원문도, 소스 종류도

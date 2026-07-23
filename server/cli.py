@@ -41,6 +41,10 @@ def progress(stage: str, status: str, data: dict | None = None) -> None:
         print(f"  ✓ {label}: {detail}", flush=True)
         return
 
+    if stage == "analyze" and data and data.get("preset"):
+        print("  ✓ 기본 문체 적용 (쓴 글이 없어 분석 생략, 토큰 0)", flush=True)
+        return
+
     print(f"  ✓ {label} 완료", flush=True)
 
 

@@ -29,10 +29,9 @@ def load_posts(source: SourceSpec) -> list[Post]:
         return load_velog_posts(source.username)
 
     if source.type == "template":
-        # 구현 우선순위 6번.
-        raise NotImplementedError(
-            "템플릿 소스는 아직 미구현입니다. --source local 로 실행하세요."
-        )
+        # 템플릿 소스는 로드할 글이 없다. pipeline 이 load_posts 를 부르지
+        # 않고 기본 문체(style_presets)를 쓴다. 여기 도달했다면 버그다.
+        raise ValueError("template 소스는 글을 로드하지 않습니다.")
 
     raise ValueError(f"알 수 없는 소스 타입: {source.type}")
 
