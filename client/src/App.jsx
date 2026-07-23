@@ -2,7 +2,9 @@ import { useEffect, useRef, useState } from 'react'
 
 import { createJob, fetchOptions, subscribeJob } from './api'
 import ChoiceList from './components/ChoiceList'
+import FolderPicker from './components/FolderPicker'
 import GeneratingView from './components/GeneratingView'
+import Landing from './components/Landing'
 import PrimaryButton from './components/PrimaryButton'
 import ResultView from './components/ResultView'
 import StepShell from './components/StepShell'
@@ -13,20 +15,19 @@ const STEPS = ['source', 'topic', 'audience', 'purpose', 'length']
 const TOTAL = STEPS.length
 
 const SOURCE_OPTIONS = [
-  { value: 'local', label: '내 컴퓨터의 마크다운 폴더' },
+  { value: 'upload', label: '내 컴퓨터의 마크다운 폴더' },
   { value: 'velog', label: 'velog' },
   { value: 'template', label: '아직 쓴 글이 없어요' },
 ]
 
 const SOURCE_HINT = {
-  local: 'GitHub Pages 블로그의 _posts 같은 폴더',
+  upload: 'GitHub Pages 블로그의 _posts 같은 폴더',
   velog: '사용자명으로 최근 글을 불러옵니다',
   template: '준비 중',
 }
 
 const EMPTY_FORM = {
-  source_type: 'local',
-  path: './sample_posts',
+  source_type: 'upload',
   username: '',
   topic: '',
   audience: '',
@@ -34,27 +35,14 @@ const EMPTY_FORM = {
   length: '',
 }
 
-// 소스마다 뭘 더 물어야 하는지. 여기만 채우면 화면이 따라온다.
-const SOURCE_FIELD = {
-  local: {
-    key: 'path',
-    placeholder: './sample_posts',
-    label: '마크다운 폴더 경로',
-  },
-  velog: {
-    key: 'username',
-    placeholder: 'velopert',
-    label: 'velog 사용자명',
-    prefix: '@',
-  },
-}
-
 export default function App() {
   const [options, setOptions] = useState(null)
   const [step, setStep] = useState(0)
   const [form, setForm] = useState(EMPTY_FORM)
+  // 폴더에서 읽은 마크다운. 요청 직전까지 form 과 따로 둔다.
+  const [folder, setFolder] = useState(null)
 
-  const [phase, setPhase] = useState('form') // form | generating | result
+  const [phase, setPhase] = useState('landing') // landing | form | generating | result
   const [done, setDone] = useState([])
   const [current, setCurrent] = useState(null)
   const [styleGuide, setStyleGuide] = useState(null)
@@ -86,8 +74,9 @@ export default function App() {
   const reset = () => {
     unsubscribe.current?.()
     setForm(EMPTY_FORM)
+    setFolder(null)
     setStep(0)
-    setPhase('form')
+    setPhase('landing')
     setDone([])
     setCurrent(null)
     setStyleGuide(null)
@@ -98,6 +87,10 @@ export default function App() {
 
   async function start(length) {
     const body = { ...form, length }
+    if (form.source_type === 'upload' && folder) {
+      body.files = folder.files
+      body.folder_name = folder.folderName
+    }
     set('length', length)
     setPhase('generating')
     setError(null)
@@ -133,6 +126,21 @@ export default function App() {
     }
   }
 
+  if (phase === 'landing') {
+    return (
+      <>
+        <Landing onStart={() => setPhase('form')} />
+        {error && (
+          <div className="mx-auto max-w-[560px] px-6 pb-16">
+            <p className="rounded-2xl bg-red-50 px-5 py-4 text-[14px] leading-[1.6] text-red-600">
+              {error}
+            </p>
+          </div>
+        )}
+      </>
+    )
+  }
+
   if (phase === 'result' && result) {
     return <ResultView result={result} model={options?.model} onRestart={reset} />
   }
@@ -149,15 +157,19 @@ export default function App() {
   }
 
   const stepName = STEPS[step]
-  const sourceField = SOURCE_FIELD[form.source_type]
-  const sourceReady = Boolean(sourceField && form[sourceField.key].trim())
+  const sourceReady =
+    form.source_type === 'upload'
+      ? Boolean(folder)
+      : form.source_type === 'velog'
+        ? Boolean(form.username.trim())
+        : false
 
   return (
     <>
-      {step > 0 && (
+      {(step > 0 || stepName === 'source') && (
         <button
           type="button"
-          onClick={back}
+          onClick={step === 0 ? () => setPhase('landing') : back}
           className="fixed top-6 left-6 rounded-xl px-3 py-2 text-[15px] text-ink-sub transition-colors duration-200 hover:text-ink"
         >
           ← 이전
@@ -178,21 +190,32 @@ export default function App() {
             onSelect={(value) => set('source_type', value)}
           />
 
-          {sourceField ? (
+          {form.source_type === 'upload' && (
+            <div className="mt-8 space-y-6">
+              <FolderPicker value={folder} onPick={setFolder} />
+              <PrimaryButton onClick={next} disabled={!sourceReady}>
+                다음
+              </PrimaryButton>
+            </div>
+          )}
+
+          {form.source_type === 'velog' && (
             <div className="mt-8 space-y-6">
               <TextField
-                value={form[sourceField.key]}
-                onChange={(v) => set(sourceField.key, v)}
+                value={form.username}
+                onChange={(v) => set('username', v)}
                 onEnter={() => sourceReady && next()}
-                placeholder={sourceField.placeholder}
-                aria-label={sourceField.label}
-                prefix={sourceField.prefix}
+                placeholder="velopert"
+                aria-label="velog 사용자명"
+                prefix="@"
               />
               <PrimaryButton onClick={next} disabled={!sourceReady}>
                 다음
               </PrimaryButton>
             </div>
-          ) : (
+          )}
+
+          {form.source_type === 'template' && (
             <p className="mt-8 rounded-2xl bg-surface px-5 py-4 text-[14px] leading-[1.6] text-ink-sub">
               아직 연결되지 않은 경로입니다. 지금은 마크다운 폴더나 velog 로만
               생성할 수 있어요.
