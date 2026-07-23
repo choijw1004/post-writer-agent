@@ -1,12 +1,19 @@
-"""파이프라인 진입점.
+"""파이프라인 진입점. 두 개다.
 
-CLI 도 FastAPI 도 이 함수 하나만 부른다. 인터페이스(입출력 방식)와 파이프라인을
-분리해 두면 나중에 React 화면을 붙일 때 로직을 건드릴 일이 없다.
+- run_pipeline()  초안 작성: 기존 글 → 문체 분석 → 초안. 결과는 복사해 가는 글.
+- run_review()    글 다듬기: 이미 있는 글 → 결정적 검사 + 편집자 → 지적 목록.
+
+둘을 한 파이프라인의 앞뒤 단계로 묶지 않은 이유가 있다. 그렇게 묶으면 이미
+글을 써둔 사람은 검토에 도달할 방법이 없다. 초안 생성을 먼저 거쳐야 하기
+때문이다. 사용자가 도구를 찾는 시점이 서로 다르므로 진입점을 나눈다.
+
+CLI 도 FastAPI 도 이 두 함수만 부른다. 인터페이스(입출력 방식)와 파이프라인을
+분리해 두면 화면을 바꿔도 로직을 건드릴 일이 없다.
 
 단계를 Crew 하나에 몰아넣지 않고 단계마다 Crew 를 따로 kickoff 하는 이유는
 두 가지다.
 - 단계별 토큰 사용량을 정확히 분리해 계측할 수 있다(채점 대응 항목).
-- 진행 상황을 단계 경계에서 콜백으로 흘려보낼 수 있다(뒤에 SSE 를 붙일 자리).
+- 진행 상황을 단계 경계에서 콜백으로 흘려보낼 수 있다(SSE 를 붙인 자리).
 """
 
 from __future__ import annotations
@@ -15,12 +22,14 @@ from typing import Callable
 
 from crewai import Crew, Process
 
-from server import tasks, tokens
+from server import checks, tasks, tokens
 from server.agents import analyst_agent, editor_agent, writer_agent
 from server.models import (
     BriefSpec,
     EditReport,
     PipelineResult,
+    ReviewNote,
+    ReviewResult,
     SourceSpec,
     StyleGuide,
 )
@@ -116,25 +125,72 @@ def run_pipeline(
     draft = _strip_code_fence(writing_out.raw)
     on_progress("write", "done", {"draft_markdown": draft})
 
-    # ── 3. 편집자 ────────────────────────────────────────────────────
-    on_progress("edit", "start")
-    editor = editor_agent()
-    editing_out = _run_stage(
-        editor,
-        tasks.editing_task(editor, draft, brief),
-        "편집자",
-        usages,
-    )
-    edit_report = editing_out.pydantic
-    if not isinstance(edit_report, EditReport):
-        edit_report = EditReport(notes=[], overall=editing_out.raw.strip())
-    on_progress("edit", "done", {"edit_report": edit_report.model_dump()})
-
+    # 초안 작성은 여기서 끝난다. 검토는 '글 다듬기'(run_review)의 몫이다.
     return PipelineResult(
         style_guide=style_guide,
         draft_markdown=draft,
-        edit_report=edit_report,
         usage=usages,
         sample_titles=[p.title for p in samples],
         sample_tokens=sample_tokens,
+    )
+
+
+def run_review(
+    draft: str,
+    audience: str,
+    purpose: str,
+    on_progress: ProgressFn = _noop,
+) -> ReviewResult:
+    """이미 있는 글에서 오타와 논리 문제를 찾는다. 글을 고쳐주지는 않는다.
+
+    두 층으로 나뉜다.
+    - 결정적 검사: 코드로 확실히 판정되는 것. 토큰 0, 즉시.
+    - 편집자: 오타와 논리. 모델의 판단이라 확실하지 않다.
+
+    두 층을 섞지 않고 note 마다 source 를 남기는 게 이 기능의 핵심이다.
+    확실한 지적과 추측을 같은 무게로 나열하면 읽는 사람이 전부 의심하거나
+    전부 믿게 된다.
+    """
+    usages: list = []
+
+    # ── 1. 결정적 검사 (LLM 없음) ────────────────────────────────────
+    on_progress("check", "start")
+    auto_notes = checks.run_checks(draft)
+    on_progress("check", "done", {"auto_count": len(auto_notes)})
+
+    # ── 2. 편집자 ────────────────────────────────────────────────────
+    on_progress("edit", "start")
+    brief = BriefSpec(topic="", audience=audience, purpose=purpose, length="")
+    editor = editor_agent()
+    editing_out = _run_stage(
+        editor,
+        # 자동 검사가 이미 찾은 것을 함께 넘겨 중복 지적을 막는다.
+        tasks.editing_task(editor, draft, brief, already_found=auto_notes),
+        "편집자",
+        usages,
+    )
+
+    report = editing_out.pydantic
+    if not isinstance(report, EditReport):
+        report = EditReport(notes=[], overall=editing_out.raw.strip())
+
+    model_notes = [
+        ReviewNote(
+            kind=note.kind,
+            source="model",
+            location=note.location,
+            problem=note.problem,
+            suggestion=note.suggestion,
+        )
+        for note in report.notes
+    ]
+    # 프롬프트로 막아도 모델이 자동 검사와 같은 지적을 반복한다. 코드로 거른다.
+    model_notes = checks.drop_overlapping(auto_notes, model_notes)
+    on_progress("edit", "done")
+
+    # 확실한 것부터 보여준다.
+    return ReviewResult(
+        notes=auto_notes + model_notes,
+        overall=report.overall,
+        usage=usages,
     )

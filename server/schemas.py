@@ -12,7 +12,7 @@ from typing import Literal
 from pydantic import BaseModel, Field, model_validator
 
 from server import config
-from server.models import PipelineResult
+from server.models import PipelineResult, ReviewResult
 
 
 class UploadedFile(BaseModel):
@@ -106,21 +106,9 @@ class StyleGuideOut(BaseModel):
     referenced_posts: list[str]
 
 
-class EditNoteOut(BaseModel):
-    location: str
-    problem: str
-    suggestion: str
-
-
-class EditReportOut(BaseModel):
-    notes: list[EditNoteOut]
-    overall: str
-
-
 class ResultOut(BaseModel):
     style_guide: StyleGuideOut
     draft_markdown: str
-    edit_report: EditReportOut
     usage: UsageOut
 
     @classmethod
@@ -128,7 +116,6 @@ class ResultOut(BaseModel):
         return cls(
             style_guide=StyleGuideOut(**result.style_guide.model_dump()),
             draft_markdown=result.draft_markdown,
-            edit_report=EditReportOut(**result.edit_report.model_dump()),
             usage=UsageOut(
                 stages=[StageUsageOut(**vars(u)) for u in result.usage],
                 total_prompt_tokens=sum(u.prompt_tokens for u in result.usage),
@@ -138,6 +125,64 @@ class ResultOut(BaseModel):
                 sample_tokens=result.sample_tokens,
             ),
         )
+
+
+class ReviewRequest(BaseModel):
+    """글 다듬기 요청. 소스도 주제도 필요 없고 글 자체만 받는다."""
+
+    draft: str = Field(min_length=1)
+    audience: str
+    purpose: str
+
+    @model_validator(mode="after")
+    def check_choices(self) -> "ReviewRequest":
+        if self.audience not in config.AUDIENCES:
+            raise ValueError(f"audience 는 {config.AUDIENCES} 중 하나여야 합니다.")
+        if self.purpose not in config.PURPOSES:
+            raise ValueError(f"purpose 는 {config.PURPOSES} 중 하나여야 합니다.")
+        if len(self.draft) > config.REVIEW_MAX_CHARS:
+            raise ValueError(
+                f"글이 너무 깁니다 ({len(self.draft):,}자, 최대 "
+                f"{config.REVIEW_MAX_CHARS:,}자)."
+            )
+        return self
+
+
+class ReviewNoteOut(BaseModel):
+    kind: str
+    source: str  # auto(코드가 확정) | model(모델의 판단)
+    location: str
+    problem: str
+    suggestion: str
+
+
+class ReviewResultOut(BaseModel):
+    notes: list[ReviewNoteOut]
+    overall: str
+    auto_count: int
+    model_count: int
+    usage: list[StageUsageOut]
+    total_tokens: int
+
+    @classmethod
+    def from_review(cls, result: ReviewResult) -> "ReviewResultOut":
+        notes = [ReviewNoteOut(**n.model_dump()) for n in result.notes]
+        return cls(
+            notes=notes,
+            overall=result.overall,
+            auto_count=result.auto_count,
+            model_count=len(notes) - result.auto_count,
+            usage=[StageUsageOut(**vars(u)) for u in result.usage],
+            total_tokens=result.total_tokens,
+        )
+
+
+class ReviewJobStatusOut(BaseModel):
+    job_id: str
+    status: Literal["running", "done", "error"]
+    events: list["ProgressEvent"]
+    result: ReviewResultOut | None = None
+    error: str | None = None
 
 
 class ProgressEvent(BaseModel):

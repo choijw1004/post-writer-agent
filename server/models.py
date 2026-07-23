@@ -93,8 +93,9 @@ class StyleGuide(BaseModel):
 
 
 class EditNote(BaseModel):
-    """지적 하나. 재작성이 아니라 '지적'이라는 점이 중요하다."""
+    """모델이 낸 지적 하나. 재작성이 아니라 '지적'이라는 점이 중요하다."""
 
+    kind: Literal["오타", "논리"] = Field(description="지적의 종류")
     location: str = Field(description="문제가 있는 위치 (소제목명 + 문단 번호)")
     problem: str = Field(description="무엇이 문제인지")
     suggestion: str = Field(description="대안 (해당 문장 범위로 한정)")
@@ -103,6 +104,36 @@ class EditNote(BaseModel):
 class EditReport(BaseModel):
     notes: list[EditNote] = Field(default_factory=list)
     overall: str = Field(default="", description="전체 총평 한두 문장")
+
+
+class ReviewNote(BaseModel):
+    """다듬기 결과의 지적 하나.
+
+    source 가 핵심이다. 'auto' 는 코드가 확실히 판정한 것이고 'model' 은
+    모델의 판단이다. 둘을 같은 무게로 나열하면 읽는 사람이 전부 의심하거나
+    전부 믿게 되므로, 화면에서 구분해 보여준다.
+    """
+
+    kind: Literal["오타", "논리", "형식"]
+    source: Literal["auto", "model"]
+    location: str
+    problem: str
+    suggestion: str
+
+
+@dataclass
+class ReviewResult:
+    notes: list[ReviewNote]
+    overall: str
+    usage: list["StageUsage"] = field(default_factory=list)
+
+    @property
+    def total_tokens(self) -> int:
+        return sum(u.total_tokens for u in self.usage)
+
+    @property
+    def auto_count(self) -> int:
+        return sum(1 for n in self.notes if n.source == "auto")
 
 
 # ── 파이프라인 결과 ────────────────────────────────────────────────────
@@ -123,7 +154,6 @@ class StageUsage:
 class PipelineResult:
     style_guide: StyleGuide
     draft_markdown: str
-    edit_report: EditReport
     usage: list[StageUsage] = field(default_factory=list)
     sample_titles: list[str] = field(default_factory=list)
     sample_tokens: int = 0

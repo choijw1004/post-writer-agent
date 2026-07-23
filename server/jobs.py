@@ -16,8 +16,8 @@ import uuid
 from collections import OrderedDict
 from dataclasses import dataclass, field
 
-from server.models import PipelineResult, SourceSpec
-from server.pipeline import run_pipeline
+from server.models import PipelineResult, ReviewResult, SourceSpec
+from server.pipeline import run_pipeline, run_review
 
 # 메모리에만 두는 저장소다. 서버를 재시작하면 사라진다. 수업 데모 범위에서는
 # 충분하고, 필요해지면 이 클래스만 갈아 끼우면 된다.
@@ -27,9 +27,10 @@ MAX_JOBS = 32
 @dataclass
 class Job:
     id: str
+    kind: str = "draft"  # draft(초안 작성) | review(글 다듬기)
     status: str = "running"  # running | done | error
     events: list[dict] = field(default_factory=list)
-    result: PipelineResult | None = None
+    result: PipelineResult | ReviewResult | None = None
     error: str | None = None
 
     def emit(
@@ -50,8 +51,8 @@ class JobStore:
         self._lock = threading.Lock()
         self._max_jobs = max_jobs
 
-    def create(self) -> Job:
-        job = Job(id=uuid.uuid4().hex[:12])
+    def create(self, kind: str = "draft") -> Job:
+        job = Job(id=uuid.uuid4().hex[:12], kind=kind)
         with self._lock:
             self._jobs[job.id] = job
             while len(self._jobs) > self._max_jobs:
@@ -66,29 +67,16 @@ class JobStore:
 store = JobStore()
 
 
-def start_job(
-    source: SourceSpec,
-    topic: str,
-    audience: str,
-    purpose: str,
-    length: str,
-) -> Job:
-    """job 을 만들고 백그라운드 스레드에서 파이프라인을 돌린다."""
-    job = store.create()
-    job.emit("queued", "start", "생성 준비 중")
+def _spawn(job: Job, work) -> Job:
+    """work() 를 백그라운드 스레드에서 돌리고 결과·실패를 job 에 옮긴다.
+
+    초안 작성과 다듬기가 이 함수를 공유한다. 실패 처리와 완료 이벤트가 두
+    군데로 갈라지지 않게 하려는 것이다.
+    """
 
     def run() -> None:
         try:
-            result = run_pipeline(
-                source=source,
-                topic=topic,
-                audience=audience,
-                purpose=purpose,
-                length=length,
-                on_progress=lambda stage, status, data=None: job.emit(
-                    stage, status, data=data
-                ),
-            )
+            result = work()
         except Exception as exc:  # noqa: BLE001 - 어떤 실패든 job 상태로 옮긴다
             job.error = f"{type(exc).__name__}: {exc}"
             job.status = "error"
@@ -102,3 +90,47 @@ def start_job(
 
     threading.Thread(target=run, name=f"job-{job.id}", daemon=True).start()
     return job
+
+
+def start_job(
+    source: SourceSpec,
+    topic: str,
+    audience: str,
+    purpose: str,
+    length: str,
+) -> Job:
+    """초안 작성 job."""
+    job = store.create(kind="draft")
+    job.emit("queued", "start", "생성 준비 중")
+
+    return _spawn(
+        job,
+        lambda: run_pipeline(
+            source=source,
+            topic=topic,
+            audience=audience,
+            purpose=purpose,
+            length=length,
+            on_progress=lambda stage, status, data=None: job.emit(
+                stage, status, data=data
+            ),
+        ),
+    )
+
+
+def start_review(draft: str, audience: str, purpose: str) -> Job:
+    """글 다듬기 job. 편집자 1회 호출이라 초안 작성보다 훨씬 빨리 끝난다."""
+    job = store.create(kind="review")
+    job.emit("queued", "start", "검토 준비 중")
+
+    return _spawn(
+        job,
+        lambda: run_review(
+            draft=draft,
+            audience=audience,
+            purpose=purpose,
+            on_progress=lambda stage, status, data=None: job.emit(
+                stage, status, data=data
+            ),
+        ),
+    )

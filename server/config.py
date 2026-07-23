@@ -30,10 +30,14 @@ LENGTH_SPEC = {
     "길게": "3000~4500자, 소제목 5개 이상",
 }
 
+# ── 글 다듬기 ──────────────────────────────────────────────────────────
+# 검토는 글 전체를 프롬프트에 넣으므로 길이가 곧 비용이다.
+REVIEW_MAX_CHARS = int(os.getenv("REVIEW_MAX_CHARS", "30000"))
+
 # ── 폴더 업로드 ────────────────────────────────────────────────────────
 # 브라우저가 폴더의 md 를 읽어 보낸다. 어차피 토큰 예산이 몇 편만 남기므로
 # 요청 자체를 크게 받을 이유가 없다. 넘치면 앞에서부터 자른다.
-UPLOAD_MAX_FILES = int(os.getenv("UPLOAD_MAX_FILES", "40"))
+UPLOAD_MAX_FILES = int(os.getenv("UPLOAD_MAX_FILES", "100"))
 UPLOAD_MAX_CHARS = int(os.getenv("UPLOAD_MAX_CHARS", "400000"))
 
 # ── velog (비공식 API) ─────────────────────────────────────────────────
