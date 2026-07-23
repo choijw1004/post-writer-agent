@@ -74,10 +74,11 @@ def run_pipeline(
     topic: str,
     doc_type: str,
     tone: str,
+    material: str = "",
     on_progress: ProgressFn = _noop,
 ) -> PipelineResult:
     """기존 글 → 문체 분석 → 초안 생성까지 실행한다."""
-    brief = BriefSpec(topic=topic, doc_type=doc_type, tone=tone)
+    brief = BriefSpec(topic=topic, doc_type=doc_type, tone=tone, material=material)
     usages: list = []
 
     if source.type == "template":

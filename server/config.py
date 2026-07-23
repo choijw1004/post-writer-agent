@@ -31,6 +31,9 @@ MAX_STYLE_SAMPLES = int(os.getenv("MAX_STYLE_SAMPLES", "10"))
 # 모자라면 보강 Task 를 한 번 더 돌린다 (checks.count_subheadings).
 MIN_SUBHEADINGS = int(os.getenv("MIN_SUBHEADINGS", "8"))
 
+# 재료(겪은 일·메모)는 작가 프롬프트에 그대로 들어가므로 길이가 곧 비용이다.
+MATERIAL_MAX_CHARS = int(os.getenv("MATERIAL_MAX_CHARS", "8000"))
+
 # ── 말투 ──────────────────────────────────────────────────────────────
 TONE_SPEC = {
     "경어체": "존댓말로 서술한다 (~습니다 또는 ~해요체). 반말을 쓰지 않는다.",

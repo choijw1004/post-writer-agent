@@ -1,8 +1,13 @@
 import { useRef } from 'react'
 
-// 다듬을 글을 받는다. 붙여넣기와 .md 열기 둘 다 연다.
-// 초안 작성에서 넘어온 경우에는 이미 채워진 채로 들어온다.
-export default function DraftInput({ value, onChange }) {
+// 긴 텍스트를 받는다. 붙여넣기와 .md 열기 둘 다 연다.
+// 글 다듬기(다듬을 글)와 초안 작성(재료 메모)이 공유한다.
+export default function DraftInput({
+  value,
+  onChange,
+  placeholder = '다듬을 글을 붙여넣으세요. 마크다운 그대로 넣으면 됩니다.',
+  rows = 12,
+}) {
   const inputRef = useRef(null)
 
   async function handleFile(event) {
@@ -19,8 +24,8 @@ export default function DraftInput({ value, onChange }) {
       <textarea
         value={value}
         onChange={(e) => onChange(e.target.value)}
-        placeholder="다듬을 글을 붙여넣으세요. 마크다운 그대로 넣으면 됩니다."
-        rows={12}
+        placeholder={placeholder}
+        rows={rows}
         className="w-full resize-y rounded-2xl border border-line bg-surface px-5 py-4 text-[15px] leading-[1.7] transition-all duration-200 outline-none placeholder:text-ink-sub focus:border-brand focus:bg-white"
       />
 

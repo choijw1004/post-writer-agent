@@ -97,6 +97,7 @@ def start_job(
     topic: str,
     doc_type: str,
     tone: str,
+    material: str = "",
 ) -> Job:
     """초안 작성 job."""
     job = store.create(kind="draft")
@@ -109,6 +110,7 @@ def start_job(
             topic=topic,
             doc_type=doc_type,
             tone=tone,
+            material=material,
             on_progress=lambda stage, status, data=None: job.emit(
                 stage, status, data=data
             ),

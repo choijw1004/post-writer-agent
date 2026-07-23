@@ -95,6 +95,7 @@ def create_job(req: GenerateRequest) -> JobCreated:
         topic=req.topic,
         doc_type=req.doc_type,
         tone=req.tone,
+        material=req.material,
     )
     return JobCreated(job_id=job.id, status=job.status)
 

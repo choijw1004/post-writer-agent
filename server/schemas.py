@@ -33,9 +33,13 @@ class GenerateRequest(BaseModel):
     username: str | None = Field(default=None, description="velog 소스: 사용자명")
     template: str | None = Field(default=None, description="template 소스: 템플릿 키")
 
-    topic: str = Field(min_length=1, max_length=200)
+    # 화면에서 "자세하게 적어주면 품질이 올라간다"고 유도하므로 넉넉하게 둔다.
+    topic: str = Field(min_length=1, max_length=500)
     doc_type: str
     tone: str
+    material: str = Field(
+        default="", description="겪은 일·메모·코드 조각. 글의 알맹이 (선택)"
+    )
 
     @model_validator(mode="after")
     def check_choices(self) -> "GenerateRequest":
@@ -43,6 +47,11 @@ class GenerateRequest(BaseModel):
             raise ValueError(f"doc_type 은 {DOC_TYPE_NAMES} 중 하나여야 합니다.")
         if self.tone not in config.TONES:
             raise ValueError(f"tone 은 {config.TONES} 중 하나여야 합니다.")
+        if len(self.material) > config.MATERIAL_MAX_CHARS:
+            raise ValueError(
+                f"재료가 너무 깁니다 ({len(self.material):,}자, 최대 "
+                f"{config.MATERIAL_MAX_CHARS:,}자)."
+            )
         if self.source_type == "local" and not self.path:
             raise ValueError("local 소스는 path 가 필요합니다.")
         if self.source_type == "velog" and not self.username:

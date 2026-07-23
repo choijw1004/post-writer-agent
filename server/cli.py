@@ -139,6 +139,16 @@ def main(argv: list[str] | None = None) -> int:
         help="문서 유형 (docs/type.md 의 4종)",
     )
     parser.add_argument("--tone", default="경어체", choices=config.TONES)
+    parser.add_argument(
+        "--material",
+        default="",
+        help="글의 재료: 겪은 일·메모·코드 조각 (선택)",
+    )
+    parser.add_argument(
+        "--material-file",
+        metavar="FILE",
+        help="재료를 파일에서 읽는다 (--material 보다 우선)",
+    )
     parser.add_argument("--out", help="초안 마크다운을 저장할 파일 경로")
     args = parser.parse_args(argv)
 
@@ -155,8 +165,18 @@ def main(argv: list[str] | None = None) -> int:
 
     source = SourceSpec(type=args.source, path=args.path, username=args.username)
 
+    material = args.material
+    if args.material_file:
+        material_path = Path(args.material_file).expanduser()
+        if not material_path.exists():
+            print(f"오류: 재료 파일을 찾을 수 없습니다: {material_path}", file=sys.stderr)
+            return 1
+        material = material_path.read_text(encoding="utf-8")
+
     print(f"주제: {args.topic}")
-    print(f"문서 유형: {args.type} / 말투: {args.tone}\n")
+    print(f"문서 유형: {args.type} / 말투: {args.tone}", end="")
+    print(f" / 재료: {len(material):,}자" if material else "")
+    print()
 
     try:
         result = run_pipeline(
@@ -164,6 +184,7 @@ def main(argv: list[str] | None = None) -> int:
             topic=args.topic,
             doc_type=args.type,
             tone=args.tone,
+            material=material,
             on_progress=progress,
         )
     except (

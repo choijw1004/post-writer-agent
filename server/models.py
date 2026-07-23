@@ -47,6 +47,9 @@ class BriefSpec:
     topic: str
     doc_type: str  # doc_types.DOC_TYPES 의 키
     tone: str  # config.TONES 의 키. 글 다듬기에서는 빈 문자열.
+    # 필자가 겪은 일·메모·코드 조각. 주제 한 줄만으로는 모델이 일반론으로
+    # 본문을 채우므로, 글의 알맹이가 될 재료를 선택 입력으로 받는다.
+    material: str = ""
 
 
 # ── 분석가 산출물 ──────────────────────────────────────────────────────
