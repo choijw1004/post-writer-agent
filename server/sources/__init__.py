@@ -1,0 +1,33 @@
+"""기존 글 소스. 어떤 소스든 list[Post] 로 수렴한다."""
+
+from server.models import Post, SourceSpec
+from server.sources.local_md import load_local_posts
+
+
+def load_posts(source: SourceSpec) -> list[Post]:
+    """소스 명세를 받아 글 목록을 돌려준다.
+
+    이 함수가 소스 분기를 흡수하는 유일한 지점이다. 뒤쪽 단계(분석가·작가·
+    편집자)는 소스가 무엇이었는지 알지 못한다.
+    """
+    if source.type == "local":
+        if not source.path:
+            raise ValueError("local 소스는 path(마크다운 폴더 경로)가 필요합니다.")
+        return load_local_posts(source.path)
+
+    if source.type == "velog":
+        # 구현 우선순위 5번. 비공식 GraphQL API라 로컬 경로를 먼저 완성한다.
+        raise NotImplementedError(
+            "velog 소스는 아직 미구현입니다. --source local 로 실행하세요."
+        )
+
+    if source.type == "template":
+        # 구현 우선순위 6번.
+        raise NotImplementedError(
+            "템플릿 소스는 아직 미구현입니다. --source local 로 실행하세요."
+        )
+
+    raise ValueError(f"알 수 없는 소스 타입: {source.type}")
+
+
+__all__ = ["load_posts", "load_local_posts"]

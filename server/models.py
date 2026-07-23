@@ -1,0 +1,130 @@
+"""파이프라인이 주고받는 자료구조.
+
+핵심 설계 원칙: 소스(로컬 md / velog / 템플릿)가 무엇이든 StyleGuide 라는
+동일한 형태로 수렴시킨 뒤 작가에게 넘긴다. 작가는 소스 종류를 알지 못한다.
+"""
+
+from __future__ import annotations
+
+from dataclasses import dataclass, field
+from typing import Literal
+
+from pydantic import BaseModel, Field
+
+SourceType = Literal["local", "velog", "template"]
+
+
+@dataclass
+class Post:
+    """소스에서 읽어온 기존 글 한 편."""
+
+    title: str
+    body: str
+    origin: str  # 파일 경로나 URL
+
+
+@dataclass
+class SourceSpec:
+    """어디서 기존 글을 가져올지에 대한 명세."""
+
+    type: SourceType
+    path: str | None = None  # local: md 폴더 경로
+    username: str | None = None  # velog: 사용자명
+    template: str | None = None  # template: 템플릿 키
+
+
+@dataclass
+class BriefSpec:
+    """사용자가 입력하는 글 요청."""
+
+    topic: str
+    audience: str
+    purpose: str
+    length: str
+
+
+# ── 분석가 산출물 ──────────────────────────────────────────────────────
+
+
+class StyleGuide(BaseModel):
+    """기존 글에서 추출한 문체 특징.
+
+    원문을 그대로 싣지 않고 이 구조로 '압축'해서 작가에게 넘긴다.
+    같은 정보를 원문으로 넘기면 토큰이 수십 배 들고, 작가 프롬프트에서
+    주제 지시가 묻힌다.
+    """
+
+    tone: str = Field(description="전반적인 어투 (예: 담백한 존댓말, 구어체 반말)")
+    sentence_ending: str = Field(description="문장 종결 어미 패턴")
+    avg_paragraph_sentences: int = Field(description="문단당 평균 문장 수")
+    heading_style: str = Field(description="소제목 작성 방식 (명사형/의문형/단계형 등)")
+    code_example_ratio: str = Field(description="코드 예시 비중과 사용 방식")
+    vocabulary: str = Field(description="자주 쓰는 어휘·표현, 외래어 표기 습관")
+    structure_pattern: str = Field(description="글 전체의 전형적인 전개 구조")
+    dos: list[str] = Field(description="이 필자를 흉내 내려면 반드시 지킬 것")
+    donts: list[str] = Field(description="이 필자라면 하지 않을 것")
+    referenced_posts: list[str] = Field(
+        default_factory=list, description="요청 주제와 관련해 특히 참고한 글 제목"
+    )
+
+    def to_prompt_block(self) -> str:
+        """작가 프롬프트에 끼워 넣을 텍스트로 직렬화."""
+        return "\n".join(
+            [
+                f"- 어투: {self.tone}",
+                f"- 문장 종결: {self.sentence_ending}",
+                f"- 문단당 평균 문장 수: {self.avg_paragraph_sentences}",
+                f"- 소제목 스타일: {self.heading_style}",
+                f"- 코드 예시: {self.code_example_ratio}",
+                f"- 어휘·표현: {self.vocabulary}",
+                f"- 전개 구조: {self.structure_pattern}",
+                "- 반드시 지킬 것:",
+                *[f"    · {d}" for d in self.dos],
+                "- 하지 말 것:",
+                *[f"    · {d}" for d in self.donts],
+            ]
+        )
+
+
+# ── 편집자 산출물 ──────────────────────────────────────────────────────
+
+
+class EditNote(BaseModel):
+    """지적 하나. 재작성이 아니라 '지적'이라는 점이 중요하다."""
+
+    location: str = Field(description="문제가 있는 위치 (소제목명 + 문단 번호)")
+    problem: str = Field(description="무엇이 문제인지")
+    suggestion: str = Field(description="대안 (해당 문장 범위로 한정)")
+
+
+class EditReport(BaseModel):
+    notes: list[EditNote] = Field(default_factory=list)
+    overall: str = Field(default="", description="전체 총평 한두 문장")
+
+
+# ── 파이프라인 결과 ────────────────────────────────────────────────────
+
+
+@dataclass
+class StageUsage:
+    """단계별 토큰 사용량. 화면·발표자료에 그대로 올라간다."""
+
+    stage: str
+    prompt_tokens: int
+    completion_tokens: int
+    total_tokens: int
+    requests: int
+
+
+@dataclass
+class PipelineResult:
+    style_guide: StyleGuide
+    draft_markdown: str
+    edit_report: EditReport
+    usage: list[StageUsage] = field(default_factory=list)
+    sample_titles: list[str] = field(default_factory=list)
+    sample_tokens: int = 0
+
+    @property
+    def total_tokens(self) -> int:
+        return sum(u.total_tokens for u in self.usage)
