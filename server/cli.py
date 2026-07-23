@@ -16,10 +16,6 @@ from server import config, tokens
 from server.models import PipelineResult, SourceSpec
 from server.pipeline import run_pipeline
 
-AUDIENCES = ["주니어 개발자", "동료 개발자", "비개발자", "일반 독자"]
-PURPOSES = ["학습 정리", "트러블슈팅 공유", "회고", "튜토리얼"]
-LENGTHS = ["짧게", "보통", "길게"]
-
 STAGE_LABEL = {
     "load": "기존 글 로드",
     "analyze": "① 분석가 — 문체 추출",
@@ -86,9 +82,9 @@ def main(argv: list[str] | None = None) -> int:
     )
     parser.add_argument("--path", help="local 소스: 마크다운 폴더 경로")
     parser.add_argument("--topic", required=True, help="쓸 글의 주제")
-    parser.add_argument("--audience", default="주니어 개발자", choices=AUDIENCES)
-    parser.add_argument("--purpose", default="학습 정리", choices=PURPOSES)
-    parser.add_argument("--length", default="보통", choices=LENGTHS)
+    parser.add_argument("--audience", default="주니어 개발자", choices=config.AUDIENCES)
+    parser.add_argument("--purpose", default="학습 정리", choices=config.PURPOSES)
+    parser.add_argument("--length", default="보통", choices=config.LENGTHS)
     parser.add_argument("--out", help="초안 마크다운을 저장할 파일 경로")
     args = parser.parse_args(argv)
 

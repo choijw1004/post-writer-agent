@@ -29,3 +29,14 @@ LENGTH_SPEC = {
     "보통": "1500~2500자, 소제목 3~5개",
     "길게": "3000~4500자, 소제목 5개 이상",
 }
+
+# 사용자 입력 선택지. CLI 와 API 가 같은 목록을 공유한다.
+AUDIENCES = ["주니어 개발자", "동료 개발자", "비개발자", "일반 독자"]
+PURPOSES = ["학습 정리", "트러블슈팅 공유", "회고", "튜토리얼"]
+LENGTHS = list(LENGTH_SPEC)
+
+# React 개발 서버 오리진. 배포 시 환경변수로 덮어쓴다.
+CORS_ORIGINS = os.getenv(
+    "BLOG_AGENT_CORS_ORIGINS",
+    "http://localhost:5173,http://127.0.0.1:5173,http://localhost:3000",
+).split(",")
