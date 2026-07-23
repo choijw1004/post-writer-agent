@@ -25,7 +25,7 @@
 
 이름은 초록(抄錄), 요점을 뽑아 적는다는 뜻입니다. 글을 통째로 모델에 넣지 않고 문체를 규칙으로 뽑아 그것만 넘긴다는 설계와 맞닿아 있습니다.
 
-> **개발 기간** : 2025.06 ~ (SKALA 프로젝트)
+> **개발 기간** : 2025.07 ~
 
 ## Features
 
@@ -41,17 +41,6 @@
 ## Architecture
 
 원문은 작가에게 전달되지 않습니다. 소스가 무엇이든 `StyleGuide`라는 압축된 규칙으로 수렴한 뒤 넘기기 때문에, 참고할 글이 많아져도 비용이 그만큼 늘지 않습니다.
-
-```mermaid
-flowchart LR
-    A[기존 글<br/>폴더 · velog · 없음] --> B[분석가<br/>문체 추출]
-    B --> C[StyleGuide<br/>규칙으로 압축]
-    C --> D[작가<br/>유형 템플릿 + 재료 + 말투]
-    D --> E{소제목 8개?}
-    E -- 미달 --> F[보강 1회<br/>기존 본문 보존]
-    E -- 충족 --> G[초안 완성]
-    F --> G
-```
 
 1. **분석가** — 기존 글에서 재현 가능한 문체 특징을 추출해 `StyleGuide`로 압축합니다.
 2. **작가** — 문서 유형 템플릿 + 재료 + 말투로 초안을 씁니다. 소스가 무엇이었는지 모릅니다.
@@ -79,13 +68,13 @@ flowchart LR
 ### Installation
 
 ```bash
-# 백엔드
+# server
 python3.12 -m venv .venv
 .venv/bin/pip install -r requirements.txt
 echo "OPENAI_API_KEY=sk-..." > .env
 .venv/bin/uvicorn server.api:app --reload --port 8000
 
-# 프론트엔드
+# client
 cd client && npm install && npm run dev
 ```
 
