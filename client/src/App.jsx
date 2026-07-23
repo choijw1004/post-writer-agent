@@ -20,17 +20,33 @@ const SOURCE_OPTIONS = [
 
 const SOURCE_HINT = {
   local: 'GitHub Pages 블로그의 _posts 같은 폴더',
-  velog: '준비 중',
+  velog: '사용자명으로 최근 글을 불러옵니다',
   template: '준비 중',
 }
 
 const EMPTY_FORM = {
   source_type: 'local',
   path: './sample_posts',
+  username: '',
   topic: '',
   audience: '',
   purpose: '',
   length: '',
+}
+
+// 소스마다 뭘 더 물어야 하는지. 여기만 채우면 화면이 따라온다.
+const SOURCE_FIELD = {
+  local: {
+    key: 'path',
+    placeholder: './sample_posts',
+    label: '마크다운 폴더 경로',
+  },
+  velog: {
+    key: 'username',
+    placeholder: 'velopert',
+    label: 'velog 사용자명',
+    prefix: '@',
+  },
 }
 
 export default function App() {
@@ -133,6 +149,8 @@ export default function App() {
   }
 
   const stepName = STEPS[step]
+  const sourceField = SOURCE_FIELD[form.source_type]
+  const sourceReady = Boolean(sourceField && form[sourceField.key].trim())
 
   return (
     <>
@@ -160,23 +178,24 @@ export default function App() {
             onSelect={(value) => set('source_type', value)}
           />
 
-          {form.source_type === 'local' ? (
+          {sourceField ? (
             <div className="mt-8 space-y-6">
               <TextField
-                value={form.path}
-                onChange={(v) => set('path', v)}
-                onEnter={next}
-                placeholder="./sample_posts"
-                aria-label="마크다운 폴더 경로"
+                value={form[sourceField.key]}
+                onChange={(v) => set(sourceField.key, v)}
+                onEnter={() => sourceReady && next()}
+                placeholder={sourceField.placeholder}
+                aria-label={sourceField.label}
+                prefix={sourceField.prefix}
               />
-              <PrimaryButton onClick={next} disabled={!form.path.trim()}>
+              <PrimaryButton onClick={next} disabled={!sourceReady}>
                 다음
               </PrimaryButton>
             </div>
           ) : (
             <p className="mt-8 rounded-2xl bg-surface px-5 py-4 text-[14px] leading-[1.6] text-ink-sub">
-              아직 연결되지 않은 경로입니다. 지금은 마크다운 폴더로만 생성할 수
-              있어요.
+              아직 연결되지 않은 경로입니다. 지금은 마크다운 폴더나 velog 로만
+              생성할 수 있어요.
             </p>
           )}
         </StepShell>
