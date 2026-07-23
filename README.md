@@ -1,7 +1,10 @@
-# blog-agent
+# 초록 (cholog)
 
 기존 블로그 글의 문체를 분석해 새 글 초안을 생성하는 에이전트.
 분석가 → 작가 → 편집자 3단계로 나눈 CrewAI 파이프라인이다.
+
+이름은 초록(抄錄), 요점을 뽑아 적는다는 뜻이다. 글을 통째로 모델에 넣지 않고
+문체를 규칙으로 뽑아 적어두고 그것만 넘긴다는 설계와 맞닿아 있다.
 
 요구사항 문서는 `docs/docs.md`.
 
@@ -62,6 +65,7 @@ velog 에서 불러오려면:
 | `GET` | `/api/health` | 상태·모델명 |
 | `GET` | `/api/options` | 독자/목적/분량 선택지 (프론트가 하드코딩하지 않게) |
 | `POST` | `/api/jobs` | 생성 작업 시작 → `202 {job_id}` |
+| | | `source_type`: `upload`(브라우저가 읽은 md) / `local`(서버 경로) / `velog` |
 | `GET` | `/api/jobs/{id}` | 폴링: 진행 이벤트 + 완료 시 결과 |
 | `GET` | `/api/jobs/{id}/stream` | SSE: `progress` 이벤트 → `result` 이벤트 |
 
@@ -91,10 +95,24 @@ npm run dev        # http://localhost:5173
 `/api` 는 vite 프록시가 8000 으로 넘긴다. 개발 중에도 같은 오리진이라 CORS 도,
 EventSource 의 크로스 오리진 제약도 신경 쓸 일이 없다.
 
+첫 화면은 랜딩이고, 시작하기를 누르면 단계 흐름으로 들어간다.
+
+기존 글이 있는 경우 **폴더 열기** 버튼으로 네이티브 폴더 선택창을 띄운다.
+경로를 타이핑받지 않는 이유는 두 가지다. 사용자가 경로를 외우고 있을 이유가
+없고, 브라우저는 보안상 실제 경로를 알려주지 않기 때문에 경로 기반 방식은
+브라우저와 서버가 같은 기계일 때만 성립한다. 그래서 브라우저가 폴더 안의
+마크다운을 직접 읽어 서버로 보낸다(`source_type: "upload"`).
+
+파싱 규칙은 서버가 폴더를 직접 읽는 경로(`--path`, CLI)와 같은 함수를
+공유한다(`sources/local_md.py` 의 `parse_markdown`). 제목 찾는 순서가 두
+경로에서 갈라지지 않게 하려는 것이다.
+
 디자인은 토스 방향을 따랐다.
 
 - **한 화면에 한 가지만 묻는다.** 소스 → 주제 → 독자 → 목적 → 분량 5단계.
   선택형은 고르는 즉시 다음으로 넘어간다.
+- **강조색은 초록 하나.** 제품 이름이 초록이라 docs.md 의 파랑 대신 초록을
+  썼다. `src/index.css` 의 `--color-brand` 세 줄만 바꾸면 파랑으로 돌아간다.
 - **여백이 인상의 8할.** 간격은 `StepShell` 한 곳에서만 정한다.
 - **색은 파랑 하나.** 주요 버튼과 진행 표시에만 쓴다.
 - **진행 표시는 점 3개.** 에이전트 로그를 늘어놓지 않는다.
@@ -119,8 +137,8 @@ server/
 client/
   src/App.jsx      단계 흐름과 상태 (일반적인 useState 방식)
   src/api.js       서버와 이야기하는 유일한 곳 (SSE, 실패 시 폴링)
-  src/components/  StepShell, ChoiceList, ProgressDots, StyleGuideCard,
-                   ResultView, TokenPanel …
+  src/components/  Landing, FolderPicker, StepShell, ChoiceList,
+                   ProgressDots, StyleGuideCard, ResultView, TokenPanel …
 scripts/
   token_compare.py 한/영 토큰 수 비교 실험
 sample_posts/      데모용 마크다운 3편
