@@ -151,6 +151,40 @@
       ↓
 최종 마크다운 초안
 ```
+<details>
+<summary><strong>초안 작성 화면 미리보기 (펼치기)</strong></summary>
+
+<br />
+
+**1. 홈 화면 — 초안 작성 / 퇴고 선택**
+
+<img src="/images/초록_1.png" width="720" alt="홈 화면" />
+
+**2. 문체 소스 선택 (1/5)**
+
+<img src="/images/초록_2.png" width="720" alt="문체 소스 선택" />
+
+**3. 주제 입력 (2/5)**
+
+<img src="/images/초록_3.png" width="720" alt="주제 입력" />
+
+**4. 재료 입력 (3/5)**
+
+<img src="/images/초록_5.png" width="720" alt="재료 입력" />
+
+**5. 문서 유형 선택 (4/5)**
+
+<img src="/images/초록_4.png" width="720" alt="문서 유형 선택" />
+
+**6. 말투 선택 (5/5)**
+
+<img src="/images/초록_6.png" width="720" alt="말투 선택" />
+
+**7. 초안 결과 — 마크다운 복사 · 토큰 사용량**
+
+<img src="/images/초록_7.png" width="720" alt="초안 결과" />
+
+</details>
 
 문체 소스는 다음 중 하나를 선택할 수 있습니다.
 
@@ -174,6 +208,20 @@
       ↓
 오탈자·논리 문제 목록 제공
 ```
+<details>
+<summary><strong>퇴고 화면 미리보기 (펼치기)</strong></summary>
+
+<br />
+
+**1. 다듬을 원문 입력 (1/2)**
+
+<img src="/images/초록_퇴고_1.png" width="720" alt="다듬을 원문 입력" />
+
+**2. 문서 유형 선택 (2/2)**
+
+<img src="/images/초록_퇴고_2.png" width="720" alt="문서 유형 선택" />
+
+</details>
 
 ---
 
