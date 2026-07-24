@@ -28,7 +28,7 @@ export default function Landing({ onStart }) {
       <h1 className="mt-12 flex items-end gap-3 text-[44px] leading-[0.95] text-[#48664d] font-black tracking-[-0.04em] sm:text-[56px]">
         <span className="text-[44px] sm:text-[56px]">草綠</span>
         <span className="pb-1 text-[20px] font-medium tracking-[-0.02em] text-[#48664d] sm:text-[24px]">
-          ;초안
+          ;초록
         </span>
       </h1>
 

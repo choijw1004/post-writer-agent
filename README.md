@@ -15,7 +15,8 @@
   <img src="https://img.shields.io/badge/OpenAI-gpt--4o-412991?style=flat-square&logo=openai&logoColor=white" />
 </p>
 
----
+![alt text](/images/image.png)
+
 
 ## Overview
 
@@ -39,7 +40,7 @@
 - **토큰 계측** — 단계별 사용량을 표로, 어디에 얼마가 들었는지 투명하게
 
 ## Architecture
-
+![alt text](/images/image-1.png)
 원문은 작가에게 전달되지 않습니다. 소스가 무엇이든 `StyleGuide`라는 압축된 규칙으로 수렴한 뒤 넘기기 때문에, 참고할 글이 많아져도 비용이 그만큼 늘지 않습니다.
 
 1. **분석가** — 기존 글에서 재현 가능한 문체 특징을 추출해 `StyleGuide`로 압축합니다.
