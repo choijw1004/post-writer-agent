@@ -9,6 +9,7 @@
 from __future__ import annotations
 
 import argparse
+import logging
 import sys
 from pathlib import Path
 
@@ -116,7 +117,23 @@ def run_review_command(args) -> int:
     return 0
 
 
+def _configure_logging() -> None:
+    """kickoff 실행 로그(cholog.*)를 stderr 로 보이게 한다.
+
+    루트 로거를 건드리지 않으므로 다른 라이브러리 로그는 조용하다.
+    """
+    logger = logging.getLogger("cholog")
+    if logger.handlers:
+        return
+    handler = logging.StreamHandler()
+    handler.setFormatter(logging.Formatter("  %(message)s"))
+    logger.addHandler(handler)
+    logger.setLevel(logging.INFO)
+    logger.propagate = False
+
+
 def main(argv: list[str] | None = None) -> int:
+    _configure_logging()
     parser = argparse.ArgumentParser(
         prog="cholog",
         description="기존 글의 문체를 학습해 초안을 만들거나, 이미 쓴 글을 다듬습니다.",
