@@ -115,8 +115,8 @@ POST /api/jobs
 | 필드 | 타입 | 필수 | 설명 |
 |---|---|---|---|
 | `source_type` | `string` | O | `local` / `upload` / `velog` / `template` |
-| `path` | `string` | △ | local 소스: 마크다운 폴더 경로 |
-| `username` | `string` | △ | velog 소스: 사용자명 |
+| `path` | `string` | X | local 소스: 마크다운 폴더 경로 |
+| `username` | `string` | X | velog 소스: 사용자명 |
 | `topic` | `string` | O | 글 주제 |
 | `doc_type` | `string` | O | 문서 유형 (4종 중 하나) |
 | `tone` | `string` | O | `경어체` / `구어체` |
