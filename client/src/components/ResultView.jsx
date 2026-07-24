@@ -57,7 +57,7 @@ export default function ResultView({ result, model, onRestart, onReview }) {
       <button
         type="button"
         onClick={() => onReview(draft)}
-        className="mt-6 w-full rounded-2xl border border-line px-6 py-5 text-left transition-all duration-200 hover:border-brand hover:bg-brand-soft active:scale-[0.99]"
+        className="mt-6 w-full rounded-2xl border border-[#48664d]/30 bg-[#48664d]/10 px-6 py-5 text-left transition-all duration-200 hover:border-[#48664d] hover:bg-[#48664d]/15 active:scale-[0.99]"
       >
         <span className="block text-[16px] font-semibold">이 초안 다듬기</span>
         <span className="mt-1 block text-[13px] text-ink-sub">

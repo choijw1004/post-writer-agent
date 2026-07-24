@@ -12,7 +12,7 @@ export default function TextField({ value, onChange, onEnter, prefix, ...props }
       className={
         prefix
           ? 'w-full bg-transparent text-[16px] outline-none placeholder:text-ink-sub'
-          : 'w-full rounded-2xl border border-line bg-surface px-5 py-4 text-[16px] transition-all duration-200 outline-none placeholder:text-ink-sub focus:border-brand focus:bg-white'
+          : 'w-full rounded-2xl border border-line bg-surface px-5 py-4 text-[16px] transition-all duration-200 outline-none placeholder:text-ink-sub focus:border-[#48664d] focus:bg-white'
       }
       {...props}
     />
@@ -21,7 +21,7 @@ export default function TextField({ value, onChange, onEnter, prefix, ...props }
   if (!prefix) return input
 
   return (
-    <div className="flex items-center gap-1 rounded-2xl border border-line bg-surface px-5 py-4 transition-all duration-200 focus-within:border-brand focus-within:bg-white">
+    <div className="flex items-center gap-1 rounded-2xl border border-line bg-surface px-5 py-4 transition-all duration-200 focus-within:border-[#48664d] focus-within:bg-white">
       <span className="text-[16px] text-ink-sub">{prefix}</span>
       {input}
     </div>

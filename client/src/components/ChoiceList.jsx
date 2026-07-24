@@ -16,13 +16,13 @@ export default function ChoiceList({ options, value, onSelect, hint }) {
             onClick={() => onSelect(key)}
             className={`w-full rounded-2xl border px-5 py-4 text-left transition-all duration-200 active:scale-[0.985] ${
               selected
-                ? 'border-brand bg-brand-soft'
-                : 'border-line bg-white hover:border-ink-sub/40 hover:bg-surface'
+                ? 'border-[#48664d] bg-[#48664d]/10'
+                : 'border-line bg-white hover:border-[#48664d]/40 hover:bg-[#48664d]/5'
             }`}
           >
             <span
               className={`block text-[16px] font-semibold ${
-                selected ? 'text-brand-dark' : 'text-ink'
+                selected ? 'text-[#48664d]' : 'text-ink'
               }`}
             >
               {label}

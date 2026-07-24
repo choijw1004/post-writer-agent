@@ -63,7 +63,7 @@ export default function FolderPicker({ value, onPick }) {
         type="button"
         onClick={() => inputRef.current?.click()}
         disabled={reading}
-        className="w-full rounded-2xl border border-dashed border-line bg-surface px-5 py-6 text-center transition-all duration-200 hover:border-brand hover:bg-brand-soft active:scale-[0.99] disabled:opacity-60"
+        className="w-full rounded-2xl border border-dashed border-line bg-surface px-5 py-6 text-center transition-all duration-200 hover:border-[#48664d] hover:bg-[#48664d]/10 active:scale-[0.99] disabled:opacity-60"
       >
         {reading ? (
           <span className="text-[15px] text-ink-sub">읽는 중…</span>

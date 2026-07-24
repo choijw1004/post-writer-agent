@@ -6,7 +6,7 @@
 const BADGE = {
   auto: {
     label: '자동 검사',
-    className: 'bg-brand-soft text-brand-dark',
+    className: 'bg-[#48664d]/10 text-[#48664d]',
   },
   model: {
     label: '모델 판단',

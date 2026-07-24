@@ -26,7 +26,7 @@ export default function DraftInput({
         onChange={(e) => onChange(e.target.value)}
         placeholder={placeholder}
         rows={rows}
-        className="w-full resize-y rounded-2xl border border-line bg-surface px-5 py-4 text-[15px] leading-[1.7] transition-all duration-200 outline-none placeholder:text-ink-sub focus:border-brand focus:bg-white"
+        className="w-full resize-y rounded-2xl border border-line bg-surface px-5 py-4 text-[15px] leading-[1.7] transition-all duration-200 outline-none placeholder:text-ink-sub focus:border-[#48664d] focus:bg-white"
       />
 
       <div className="mt-3 flex items-center justify-between">
