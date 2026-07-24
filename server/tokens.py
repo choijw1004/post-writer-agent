@@ -67,7 +67,7 @@ def select_style_samples(
     return selected, used
 
 
-def usage_from_crew_output(stage: str, token_usage) -> StageUsage:
+def usage_from_crew_output(stage: str, token_usage, seconds: float = 0.0) -> StageUsage:
     """CrewAI 의 UsageMetrics 를 우리 자료구조로 옮긴다."""
     return StageUsage(
         stage=stage,
@@ -75,21 +75,27 @@ def usage_from_crew_output(stage: str, token_usage) -> StageUsage:
         completion_tokens=getattr(token_usage, "completion_tokens", 0) or 0,
         total_tokens=getattr(token_usage, "total_tokens", 0) or 0,
         requests=getattr(token_usage, "successful_requests", 0) or 0,
+        seconds=round(seconds, 2),
     )
 
 
 def format_usage_table(usages: list[StageUsage]) -> str:
     """CLI 출력용 표. 발표 때 그대로 보여줄 수 있게."""
-    header = f"{'단계':<10}{'input':>10}{'output':>10}{'합계':>10}{'호출':>7}"
+    header = f"{'단계':<10}{'input':>10}{'output':>10}{'합계':>10}{'호출':>7}{'시간(s)':>10}"
     lines = [header, "─" * len(header) * 2]
     for u in usages:
         lines.append(
             f"{u.stage:<10}{u.prompt_tokens:>10,}{u.completion_tokens:>10,}"
-            f"{u.total_tokens:>10,}{u.requests:>7}"
+            f"{u.total_tokens:>10,}{u.requests:>7}{u.seconds:>10.2f}"
         )
     total_in = sum(u.prompt_tokens for u in usages)
     total_out = sum(u.completion_tokens for u in usages)
     total = sum(u.total_tokens for u in usages)
+    total_req = sum(u.requests for u in usages)
+    total_sec = sum(u.seconds for u in usages)
     lines.append("─" * len(header) * 2)
-    lines.append(f"{'누적':<10}{total_in:>10,}{total_out:>10,}{total:>10,}")
+    lines.append(
+        f"{'누적':<10}{total_in:>10,}{total_out:>10,}{total:>10,}"
+        f"{total_req:>7}{total_sec:>10.2f}"
+    )
     return "\n".join(lines)

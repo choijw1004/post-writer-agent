@@ -154,6 +154,7 @@ class StageUsage:
     completion_tokens: int
     total_tokens: int
     requests: int
+    seconds: float = 0.0  # 이 단계(kickoff) 의 벽시계 소요 시간
 
 
 @dataclass

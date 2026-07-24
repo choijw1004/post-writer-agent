@@ -89,6 +89,7 @@ class StageUsageOut(BaseModel):
     completion_tokens: int
     total_tokens: int
     requests: int
+    seconds: float = 0.0
 
 
 class UsageOut(BaseModel):
